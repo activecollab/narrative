@@ -49,9 +49,10 @@
      * Execute the command
      *
      * @param OutputInterface $output
+     * @return array
      */
     function execute($output) {
-      API::setKey('1-XlWd80KSOUgZNh23AATBxln7P4FZZjYMuKPrIom0');
+      API::setKey('1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST');
       API::setUrl('http://activecollab.dev/api.php');
 
       $response = null;
@@ -352,6 +353,15 @@
      */
     function isPreparation() {
       return isset($this->source['prep']) && $this->source['prep'];
+    }
+
+    /**
+     * Dump response
+     *
+     * @return bool
+     */
+    function dumpResponse() {
+      return isset($this->source['dump_response']) && $this->source['dump_response'];
     }
 
     /**
