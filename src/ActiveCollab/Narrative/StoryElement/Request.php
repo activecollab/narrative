@@ -202,7 +202,7 @@
           if($count == $validator_data) {
             $passes[] = "JSON has {$count} elements";
           } else {
-            $failures[] = "Expected {$validator_data} element, but got {$count}";
+            $failures[] = "Expected {$validator_data} element, got {$count}";
           }
         } else {
           $failures[] = 'Expected an array or object, got ' . gettype($json);
@@ -239,17 +239,17 @@
                 throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
             }
 
+            list($path, $fetch_first) = $this->processJsonPath($path);
+
             if($response->isJson()) {
               $json = $response->getJson();
 
               $store = new JsonStore();
               $fetch = $store->get($json, $path);
 
-//              if($this->getMethod() == 'PUT') {
-//                var_dump($response->getBody());
-//              }
-//
-//              var_dump($fetch);
+              if($fetch_first && is_array($fetch)) {
+                $fetch = array_shift($fetch);
+              }
 
               switch($compare_operation) {
                 case 'exists':
@@ -264,7 +264,7 @@
                   if($fetch === $compare_data) {
                     $passes[] = "Value at '{$path}' is '{$compare_data}'";
                   } else {
-                    $failures[] = "Value at '{$path}' is '{$fetch}', but we expected '{$compare_data}'";
+                    $failures[] = "Value at '{$path}' is '{$fetch}', we expected '{$compare_data}'";
                   }
 
                   break;
@@ -286,6 +286,22 @@
         }
       } else {
         throw new ValidatorParamsError('json_path', 'JSONPath validator expects an array of checkers');
+      }
+    }
+
+    /**
+     * Process JSONPath and see if we need to featch first element or an entire array
+     *
+     * @param string $path
+     * @return array
+     */
+    private function processJsonPath($path) {
+      $path_length = strlen($path);
+
+      if(substr($path, $path_length - 6) == '~first') {
+        return [ substr($path, 0, $path_length - 6), true ];
+      } else {
+        return [ $path, false ];
       }
     }
 
