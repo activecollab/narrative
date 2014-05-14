@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "98a823b3316b61a2c074309770089046",
+    "hash": "51f07161c9cf4d364d3c9725aa684ccb",
     "packages": [
         {
             "name": "activecollab/activecollab-sdk",
@@ -11,12 +11,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/activecollab-sdk.git",
-                "reference": "b28f4dc8483166ac230efa6d2761a3cc06a693ab"
+                "reference": "00afc28554cc1c9c1e54dd19a1b59392eedd5424"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/941822d2091af6d72ea7f665ee5b0046db6c04cd",
-                "reference": "b28f4dc8483166ac230efa6d2761a3cc06a693ab",
+                "reference": "00afc28554cc1c9c1e54dd19a1b59392eedd5424",
                 "shasum": ""
             },
             "require": {
@@ -44,7 +44,7 @@
             "keywords": [
                 "activecollab"
             ],
-            "time": "2014-05-12 09:21:19"
+            "time": "2014-05-14 20:43:38"
         },
         {
             "name": "herrera-io/json",
@@ -370,12 +370,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "ea1e32f8f3c78ca1a31f5a730229b028f1e76431"
+                "reference": "838bee3213e2b27e4d9fa5dc13464d8f0a65a73b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/ea1e32f8f3c78ca1a31f5a730229b028f1e76431",
-                "reference": "ea1e32f8f3c78ca1a31f5a730229b028f1e76431",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/838bee3213e2b27e4d9fa5dc13464d8f0a65a73b",
+                "reference": "838bee3213e2b27e4d9fa5dc13464d8f0a65a73b",
                 "shasum": ""
             },
             "require": {
@@ -418,7 +418,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "http://symfony.com",
-            "time": "2014-05-09 08:15:02"
+            "time": "2014-05-14 06:54:00"
         }
     ],
     "packages-dev": [
