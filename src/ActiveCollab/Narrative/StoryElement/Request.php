@@ -274,17 +274,17 @@
                   break;
                 case 'is':
                   if($fetch === $compare_data) {
-                    $passes[] = "Value at '{$path}' is " . gettype($compare_data) . " '{$compare_data}'";
+                    $passes[] = "Value at '{$path}' is " . $this->verboseVariableValue($compare_data);
                   } else {
-                    $failures[] = "Value at '{$path}' is " . gettype($fetch) . ": '{$fetch}', we expected " . gettype($compare_data) . ": '{$compare_data}'";
+                    $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($fetch) . ", we expected " . $this->verboseVariableValue($compare_data);
                   }
 
                   break;
                 case 'is_not':
                   if($fetch !== $compare_data) {
-                    $passes[] = "Value at {$path} is not " . gettype($compare_data) . ": '{$compare_data}''";
+                    $passes[] = "Value at {$path} is not " . $this->verboseVariableValue($compare_data);
                   } else {
-                    $failures[] = "Value at '{$path}' is " . gettype($compare_data) . ": '{$fetch}'. It is not what we expected";
+                    $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($compare_data) . ". It is not what we expected";
                   }
 
                   break;
@@ -316,6 +316,28 @@
         return [ $path, false ];
       }
     }
+
+    /**
+     * Return var value in a nice to read format
+     *
+     * @param string $var
+     * @return string
+     */
+    private function verboseVariableValue($var) {
+      if(is_array($var)) {
+        $result = '[';
+
+        foreach($var as $k => $v) {
+          $result .= ' "' . $k . '" => ' . $this->verboseVariableValue($v) . ',';
+        }
+
+        return rtrim($result, ',') . ' ]';
+      } elseif(is_object($var)) {
+        return 'object of class ' . get_class($var);
+      } else {
+        return '(' . gettype($var) . ') "' . (string) $var . '"';
+      }
+    } // verboseVariableValue
 
     // ---------------------------------------------------
     //  Fields and Bits
