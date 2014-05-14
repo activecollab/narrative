@@ -4,7 +4,6 @@
 
   use ActiveCollab\Narrative\Error\CommandError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
-  use ActiveCollab\SDK\Exception;
   use Symfony\Component\Console\Output\OutputInterface;
 
   /**

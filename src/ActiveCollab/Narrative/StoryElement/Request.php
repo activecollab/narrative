@@ -223,27 +223,27 @@
      * @throws \ActiveCollab\Narrative\Error\ValidatorParamsError
      */
     protected function validateJsonPath($validator_data, Response &$response, array &$passes, array &$failures) {
-      if(is_array($validator_data)) {
-        foreach($validator_data as $params) {
-          if(is_array($params) && count($params) <= 3) {
-            $compare_operation = 'exists';
-            $compare_data = null;
+      if($response->isJson()) {
+        if(is_array($validator_data)) {
+          $json = $response->getJson(); // Fetch JSON only when we have an array of checkers
 
-            switch(count($params)) {
-              case 1:
-                $path = $params[0]; break;
-              case 2:
-                list($path, $compare_operation) = $params; break;
-              case 3:
-                list($path, $compare_operation, $compare_data) = $params; break;
-              default:
-                throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
-            }
+          foreach($validator_data as $params) {
+            if(is_array($params) && count($params) <= 3) {
+              $compare_operation = 'exists';
+              $compare_data = null;
 
-            list($path, $fetch_first) = $this->processJsonPath($path);
+              switch(count($params)) {
+                case 1:
+                  $path = $params[0]; break;
+                case 2:
+                  list($path, $compare_operation) = $params; break;
+                case 3:
+                  list($path, $compare_operation, $compare_data) = $params; break;
+                default:
+                  throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
+              }
 
-            if($response->isJson()) {
-              $json = $response->getJson();
+              list($path, $fetch_first) = $this->processJsonPath($path);
 
               $store = new JsonStore();
               $fetch = $store->get($json, $path);
@@ -279,14 +279,14 @@
                   break;
               }
             } else {
-              $failures[] = 'Response is not JSON';
+              throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
             }
-          } else {
-            throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
           }
+        } else {
+          throw new ValidatorParamsError('json_path', 'JSONPath validator expects an array of checkers');
         }
       } else {
-        throw new ValidatorParamsError('json_path', 'JSONPath validator expects an array of checkers');
+        $failures[] = 'Response is not JSON';
       }
     }
 
