@@ -6,6 +6,7 @@
   use ActiveCollab\Narrative\Error\ValidatorParamsError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use ActiveCollab\Narrative\Error\RequestMethodError;
+  use ActiveCollab\SDK\Exceptions\AppException;
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Output\OutputInterface;
   use Peekmo\JsonPath\JsonStore;
@@ -69,6 +70,14 @@
             $response = API::delete($this->getPath(), $this->getPayload()); break;
           default:
             throw new RequestMethodError($this->getMethod());
+        }
+      } catch(AppException $e) {
+        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
+
+        if(is_array($e->getServerResponse())) {
+          print_r($e->getServerResponse());
+        } else {
+          print $e->getServerResponse() . "\n";
         }
       } catch(\Exception $e) {
         $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
@@ -265,17 +274,17 @@
                   break;
                 case 'is':
                   if($fetch === $compare_data) {
-                    $passes[] = "Value at '{$path}' is '{$compare_data}'";
+                    $passes[] = "Value at '{$path}' is " . gettype($compare_data) . " '{$compare_data}'";
                   } else {
-                    $failures[] = "Value at '{$path}' is '{$fetch}', we expected '{$compare_data}'";
+                    $failures[] = "Value at '{$path}' is " . gettype($fetch) . ": '{$fetch}', we expected " . gettype($compare_data) . ": '{$compare_data}'";
                   }
 
                   break;
                 case 'is_not':
                   if($fetch !== $compare_data) {
-                    $passes[] = "Value at {$path} is not '{$compare_data}''";
+                    $passes[] = "Value at {$path} is not " . gettype($compare_data) . ": '{$compare_data}''";
                   } else {
-                    $failures[] = "Value at '{$path}' is '{$fetch}'. It is not what we expected";
+                    $failures[] = "Value at '{$path}' is " . gettype($compare_data) . ": '{$fetch}'. It is not what we expected";
                   }
 
                   break;
