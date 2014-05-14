@@ -86,7 +86,9 @@
           $output->writeln('');
         }
 
-        $output->writeln("<$color>" . $this->getMethod() . ' ' . $response->getUrl() . ' - ' . $response->getHttpCode() . ' in ' . $response->getTotalTime() . " seconds</$color>");
+        $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
+
+        $output->writeln("<$color>" . $this->getMethod() . ' ' . $response->getUrl() . ' - ' . $response->getHttpCode() . ' in ' . $response->getTotalTime() . " seconds</$color>" . $prep);
 
         if(count($failures)) {
           foreach($failures as $failure) {

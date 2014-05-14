@@ -7,6 +7,7 @@
   use ActiveCollab\Narrative\Project;
   use ActiveCollab\Narrative\Story;
   use ActiveCollab\Narrative\StoryElement\Request;
+  use ActiveCollab\SDK\Exception;
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Command\Command;
   use Symfony\Component\Console\Input\InputInterface;
@@ -51,37 +52,42 @@
               $output->writeln('Story "' . $story->getName() . '" loaded from file "' . $story->getPath() . '".');
               $project->setUp($output);
 
-              $output->writeln('');
+              try {
+                $output->writeln('');
 
-              $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
+                $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
 
-              foreach($elements as $element) {
-                if($element instanceof Request) {
-                  list($response, $passes, $failures) = $element->execute($output);
+                foreach($elements as $element) {
+                  if($element instanceof Request) {
+                    list($response, $passes, $failures) = $element->execute($output);
 
-                  if($response instanceof Response && $element->dumpResponse()) {
-                    print $response->getBody();
-                  }
+                    if($response instanceof Response && $element->dumpResponse()) {
+                      print $response->getBody();
+                    }
 
-                  $total_requests++;
+                    $total_requests++;
 
-                  if(empty($response) || is_array($failures) && count($failures)) {
-                    $failed_requests ++;
-                  }
+                    if(empty($response) || is_array($failures) && count($failures)) {
+                      $failed_requests ++;
+                    }
 
-                  if(is_array($passes)) {
-                    $total_assertions += count($passes);
-                    $total_passes += count($passes);
-                  }
+                    if(is_array($passes)) {
+                      $total_assertions += count($passes);
+                      $total_passes += count($passes);
+                    }
 
-                  if(is_array($failures)) {
-                    $total_assertions += count($failures);
-                    $total_failures += count($failures);
+                    if(is_array($failures)) {
+                      $total_assertions += count($failures);
+                      $total_failures += count($failures);
+                    }
                   }
                 }
+              } catch(Exception $e) {
+                $project->tearDown($output); // Make sure that we tear down the environment in case of an error
+                throw $e;
               }
 
-              $project->tearDown($output);
+              $project->tearDown($output); // Make sure that we tear down the environment after each request
 
               $output->writeln('');
 

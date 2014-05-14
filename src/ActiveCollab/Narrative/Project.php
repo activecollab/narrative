@@ -128,6 +128,8 @@
      * @param OutputInterface $output
      */
     function setUp(OutputInterface $output) {
+      $output->writeln('Setting up the test environment');
+
       if(isset($this->configuration['set_up']) && is_array($this->configuration['set_up'])) {
         foreach($this->configuration['set_up'] as $command) {
           $this->executeCommand($command);
@@ -141,6 +143,8 @@
      * @param OutputInterface $output
      */
     function tearDown(OutputInterface $output) {
+      $output->writeln('Tearing down the test environment');
+
       if(isset($this->configuration['tear_down']) && is_array($this->configuration['tear_down'])) {
         foreach($this->configuration['tear_down'] as $command) {
           $this->executeCommand($command);
