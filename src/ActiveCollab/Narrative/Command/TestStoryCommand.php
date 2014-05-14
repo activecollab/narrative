@@ -49,8 +49,8 @@
 
             if($elements) {
               $output->writeln('Story "' . $story->getName() . '" loaded from file "' . $story->getPath() . '".');
-              $output->writeln('');
-              $output->writeln('Elements:');
+              $project->setUp($output);
+
               $output->writeln('');
 
               $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
@@ -80,6 +80,8 @@
                   }
                 }
               }
+
+              $project->tearDown($output);
 
               $output->writeln('');
 
