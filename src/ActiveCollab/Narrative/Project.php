@@ -2,7 +2,12 @@
 
   namespace ActiveCollab\Narrative;
 
+  use ActiveCollab\Narrative\Story;
+  use ActiveCollab\Narrative\StoryElement\Request;
+  use ActiveCollab\SDK\Exception;
+  use ActiveCollab\SDK\Response;
   use ActiveCollab\Narrative\Error\CommandError;
+  use ActiveCollab\Narrative\Error\ParseError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use Symfony\Component\Console\Output\OutputInterface;
 
@@ -117,6 +122,82 @@
     function isValid() {
       return is_dir($this->path) && is_file($this->path . '/project.json');
     }
+
+    /**
+     * Test a group of stories
+     *
+     * @param Story[] $stories
+     * @param OutputInterface $output
+     */
+    function testStories(array $stories, OutputInterface &$output) {
+      $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
+
+      foreach($stories as $story) {
+        try {
+          if($elements = $story->getElements()) {
+            $this->setUp($output);
+
+            try {
+              $output->writeln('');
+
+              foreach($elements as $element) {
+                if($element instanceof Request) {
+                  list($response, $passes, $failures) = $element->execute($output);
+
+                  if($response instanceof Response && $element->dumpResponse()) {
+                    print $response->getBody();
+                  }
+
+                  $total_requests++;
+
+                  if(empty($response) || is_array($failures) && count($failures)) {
+                    $failed_requests ++;
+                  }
+
+                  if(is_array($passes)) {
+                    $total_assertions += count($passes);
+                    $total_passes += count($passes);
+                  }
+
+                  if(is_array($failures)) {
+                    $total_assertions += count($failures);
+                    $total_failures += count($failures);
+                  }
+                }
+              }
+            } catch(Exception $e) {
+              $this->tearDown($output); // Make sure that we tear down the environment in case of an error
+              throw $e;
+            }
+
+            $this->tearDown($output); // Make sure that we tear down the environment after each request
+          }
+        } catch(ParseError $e) {
+          $output->writeln($e->getMessage());
+        } catch(ParseJsonError $e) {
+          $output->writeln($e->getMessage());
+          $output->writeln($e->getJson());
+        } catch(\Exception $e) {
+          $output->writeln($e->getMessage());
+        }
+      }
+
+      $output->writeln('');
+
+      if($failed_requests) {
+        $stats = "Requests: {$total_requests}. <error>Failures: {$failed_requests}</error>. ";
+      } else {
+        $stats = "Requests: {$total_requests}. Failures: {$failed_requests}. ";
+      }
+
+      if($total_failures) {
+        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. <error>Failures: {$total_failures}</error>.";
+      } else {
+        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. Failures: {$total_failures}.";
+      }
+
+      $output->writeln($stats);
+    } // testStories
 
     // ---------------------------------------------------
     //  Set up and tear down
