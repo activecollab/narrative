@@ -87,7 +87,7 @@
         $dir = new \DirectoryIterator("$this->path/stories");
 
         foreach($dir as $file) {
-          if($file->isDot() || $file->isDir() || $file->getExtension() != 'narr') {
+          if($file->isDot() || $file->isDir() || substr($file->getBasename(), 0, 1) === '.' || $file->getExtension() != 'narr') {
             continue;
           } // if
 
