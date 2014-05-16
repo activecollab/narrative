@@ -7,6 +7,7 @@
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use ActiveCollab\Narrative\Error\RequestMethodError;
   use ActiveCollab\SDK\Exceptions\AppException;
+  use ActiveCollab\SDK\Exceptions\CallFailed;
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Output\OutputInterface;
   use Peekmo\JsonPath\JsonStore;
@@ -71,19 +72,15 @@
           default:
             throw new RequestMethodError($this->getMethod());
         }
-      } catch(AppException $e) {
-        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
-
-        if(is_array($e->getServerResponse())) {
-          print_r($e->getServerResponse());
-        } else {
-          print $e->getServerResponse() . "\n";
-        }
       } catch(\Exception $e) {
-        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
+        if(method_exists($e, 'getHttpCode') && $e->getHttpCode() === 404) {
+          $response = 404;
+        } else {
+          $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
+        }
       }
 
-      if($response instanceof Response) {
+      if($response) {
         $passes = $failures = [];
 
         $this->validate($response, $passes, $failures);
@@ -97,7 +94,11 @@
 
         $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
 
-        $output->writeln("<$color>" . $this->getMethod() . ' ' . $response->getUrl() . ' - ' . $response->getHttpCode() . ' in ' . $response->getTotalTime() . " seconds</$color>" . $prep);
+        if($response instanceof Response) {
+          $output->writeln("<$color>" . $this->getMethod() . ' ' . $response->getUrl() . ' - ' . $response->getHttpCode() . ' in ' . $response->getTotalTime() . " seconds</$color>" . $prep);
+        } else {
+          $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . ' - ' . $response . " </$color>" . $prep);
+        }
 
         if(count($failures)) {
           foreach($failures as $failure) {
@@ -127,12 +128,12 @@
     /**
      * Validate response
      *
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      * @return boolean
      */
-    private function validate(Response &$response, array &$passes, array &$failures) {
+    private function validate(&$response, array &$passes, array &$failures) {
       if(isset($this->source['validate']) && is_array($this->source['validate'])) {
         foreach($this->source['validate'] as $validator => $validator_data) {
           $this->callValidator($validator, $validator_data, $response, $passes, $failures);
@@ -147,12 +148,12 @@
      *
      * @param string $validator
      * @param mixed $validator_data
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      * @throws \ActiveCollab\Narrative\Error\NoValidatorError
      */
-    private function callValidator($validator, $validator_data, Response &$response, array &$passes, array &$failures) {
+    private function callValidator($validator, $validator_data, &$response, array &$passes, array &$failures) {
       $method_name = 'validate' . ucfirst(preg_replace_callback("/_[a-z]?/", function($matches) {
         return strtoupper(ltrim($matches[0], "_"));
       }, $validator));
@@ -168,15 +169,23 @@
      * Validate if we got proper HTTP status code
      *
      * @param mixed $validator_data
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      */
-    protected function validateHttpCode($validator_data, Response &$response, array &$passes, array &$failures) {
-      if($response->getHttpCode() == $validator_data) {
-        $passes[] = 'Got HTTP code ' . $response->getHttpCode();
+    protected function validateHttpCode($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response) {
+        $code = $response->getHttpCode();
+      } elseif(is_int($response)) {
+        $code = $response;
       } else {
-        $failures[] = 'Expected HTTP code ' . $validator_data . ', got ' . $response->getHttpCode();
+        $code = null;
+      }
+
+      if($code && $code === $validator_data) {
+        $passes[] = "Got HTTP code {$code}";
+      } else {
+        $failures[] = 'Expected HTTP code ' . $validator_data . ', got ' . $this->verboseVariableValue($code);
       }
     }
 
@@ -184,12 +193,12 @@
      * Validate if we response is JSON response
      *
      * @param mixed $validator_data
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      */
-    protected function validateIsJson($validator_data, Response &$response, array &$passes, array &$failures) {
-      if($response->isJson()) {
+    protected function validateIsJson($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response && $response->isJson()) {
         $passes[] = 'Response is JSON';
       } else {
         $failures[] = 'Response is not JSON';
@@ -200,12 +209,12 @@
      * Validate if we response is JSON response
      *
      * @param mixed $validator_data
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      */
-    protected function validateJsonCountElements($validator_data, Response &$response, array &$passes, array &$failures) {
-      if($response->isJson()) {
+    protected function validateJsonCountElements($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response && $response->isJson()) {
         $json = $response->getJson();
 
         if(is_array($json)) {
@@ -228,13 +237,13 @@
      * Validate if we response is JSON response
      *
      * @param mixed $validator_data
-     * @param Response $response
+     * @param Response|int $response
      * @param array $passes
      * @param array $failures
      * @throws \ActiveCollab\Narrative\Error\ValidatorParamsError
      */
-    protected function validateJsonPath($validator_data, Response &$response, array &$passes, array &$failures) {
-      if($response->isJson()) {
+    protected function validateJsonPath($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response && $response->isJson()) {
         if(is_array($validator_data)) {
           $json = $response->getJson(); // Fetch JSON only when we have an array of checkers
 

@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "51f07161c9cf4d364d3c9725aa684ccb",
+    "hash": "1aad8f7acf22ab802de4768951f5de35",
     "packages": [
         {
             "name": "activecollab/activecollab-sdk",
@@ -11,12 +11,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/activecollab-sdk.git",
-                "reference": "00afc28554cc1c9c1e54dd19a1b59392eedd5424"
+                "reference": "e045845e2b031c4a0c3b76b7af0d821f93392a2c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/941822d2091af6d72ea7f665ee5b0046db6c04cd",
-                "reference": "00afc28554cc1c9c1e54dd19a1b59392eedd5424",
+                "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/f7b9e3f3dc06a2ea8020bb5b4cf0c17cb8a4a011",
+                "reference": "e045845e2b031c4a0c3b76b7af0d821f93392a2c",
                 "shasum": ""
             },
             "require": {
@@ -44,7 +44,7 @@
             "keywords": [
                 "activecollab"
             ],
-            "time": "2014-05-14 20:43:38"
+            "time": "2014-05-16 21:21:46"
         },
         {
             "name": "herrera-io/json",
@@ -370,12 +370,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "838bee3213e2b27e4d9fa5dc13464d8f0a65a73b"
+                "reference": "50be4f30d0a93404e5d62b05fd7294492cf64c4f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/838bee3213e2b27e4d9fa5dc13464d8f0a65a73b",
-                "reference": "838bee3213e2b27e4d9fa5dc13464d8f0a65a73b",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/50be4f30d0a93404e5d62b05fd7294492cf64c4f",
+                "reference": "50be4f30d0a93404e5d62b05fd7294492cf64c4f",
                 "shasum": ""
             },
             "require": {
@@ -418,7 +418,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "http://symfony.com",
-            "time": "2014-05-14 06:54:00"
+            "time": "2014-05-15 08:56:35"
         }
     ],
     "packages-dev": [
