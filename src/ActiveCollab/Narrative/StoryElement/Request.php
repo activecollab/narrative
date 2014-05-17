@@ -125,7 +125,7 @@
       }
 
       // Output response, if needed
-      if(isset($this->source['dump_response']) && $this->source['dump_response']) {
+      if(isset($this->source['dump_response']) && $this->source['dump_response'] && $response instanceof Response) {
         if($response->isJson()) {
           print_r($response->getJson());
         } else {
