@@ -57,7 +57,7 @@
       API::setKey('1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST');
       API::setUrl('http://activecollab.dev/api.php');
 
-      $response = null;
+      $response = $request_time = null;
 
       try {
         switch($this->getMethod()) {
@@ -75,6 +75,7 @@
       } catch(\Exception $e) {
         if(method_exists($e, 'getHttpCode') && $e->getHttpCode() === 404) {
           $response = 404;
+          $request_time = method_exists($e, 'getRequestTime') ? $e->getRequestTime() : null;
         } else {
           $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
         }
@@ -84,40 +85,52 @@
         $passes = $failures = [];
 
         $this->validate($response, $passes, $failures);
-
-        if(empty($failures)) {
-          $color = 'info';
-        } else {
-          $color = 'error';
-          $output->writeln('');
-        }
-
-        $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
-
-        if($response instanceof Response) {
-          $output->writeln("<$color>" . $this->getMethod() . ' ' . $response->getUrl() . ' - ' . $response->getHttpCode() . ' in ' . $response->getTotalTime() . " seconds</$color>" . $prep);
-        } else {
-          $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . ' - ' . $response . " </$color>" . $prep);
-        }
-
-        if(count($failures)) {
-          foreach($failures as $failure) {
-            $output->writeln('<error>- ' . $failure . '</error>');
-          }
-          $output->writeln('');
-        }
-
-        if(isset($this->source['dump_response']) && $this->source['dump_response']) {
-          if($response->isJson()) {
-            print_r($response->getJson());
-          } else {
-            $output->writeln($response->getBody());
-          }
-        }
+        $this->printRequestStatusLine($response, $passes, $failures, $request_time, $output);
 
         return [ $response, $passes, $failures ];
       } else {
         return [ null, null, null ];
+      }
+    }
+
+    /**
+     * Output status message
+     *
+     * @param Response|int $response
+     * @param array $passes
+     * @param array $failures
+     * @param float|null $request_time
+     * @param OutputInterface $output
+     */
+    private function printRequestStatusLine($response, $passes, $failures, $request_time, OutputInterface $output) {
+      if(empty($failures)) {
+        $color = 'info';
+      } else {
+        $color = 'error';
+        $output->writeln('');
+      }
+
+      $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
+      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
+      $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
+
+      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . " - {$http_code} in {$request_time} seconds</$color> {$prep}");
+
+      // Output failure lines
+      if(count($failures)) {
+        foreach($failures as $failure) {
+          $output->writeln('<error>- ' . $failure . '</error>');
+        }
+        $output->writeln('');
+      }
+
+      // Output response, if needed
+      if(isset($this->source['dump_response']) && $this->source['dump_response']) {
+        if($response->isJson()) {
+          print_r($response->getJson());
+        } else {
+          $output->writeln($response->getBody());
+        }
       }
     }
 

@@ -6,7 +6,7 @@
     "symfony/console" : "~2.3",
     "herrera-io/phar-update" : "~1.0",
     "peekmo/jsonpath": "dev-master",
-    "activecollab/activecollab-sdk": "dev-develop#e045845e2b031c4a0c3b76b7af0d821f93392a2c"
+    "activecollab/activecollab-sdk": "dev-develop#67aa9239a6c84280efc50b57bc5e78d7ee952059"
   },
   "minimum-stability": "dev",
   "autoload": {
