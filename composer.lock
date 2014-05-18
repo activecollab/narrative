@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "18a53cf42c27cb72f9166a8b773cbc4d",
+    "hash": "d55ce4b56e223b8177c80b4629fa5e55",
     "packages": [
         {
             "name": "activecollab/activecollab-sdk",
@@ -11,12 +11,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/activecollab-sdk.git",
-                "reference": "67aa9239a6c84280efc50b57bc5e78d7ee952059"
+                "reference": "c9aa371ad85562dfdb674fc8a5a86b707eb636a2"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/f7b9e3f3dc06a2ea8020bb5b4cf0c17cb8a4a011",
-                "reference": "67aa9239a6c84280efc50b57bc5e78d7ee952059",
+                "reference": "c9aa371ad85562dfdb674fc8a5a86b707eb636a2",
                 "shasum": ""
             },
             "require": {
@@ -44,7 +44,7 @@
             "keywords": [
                 "activecollab"
             ],
-            "time": "2014-05-17 09:32:03"
+            "time": "2014-05-18 12:55:48"
         },
         {
             "name": "herrera-io/json",
@@ -282,12 +282,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Peekmo/JsonPath.git",
-                "reference": "cf452d46232ab5b9ac1846eaaebd609fcf49bdef"
+                "reference": "b5e14d95473932a236fdbff8f3c8e9f5f533e7eb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Peekmo/JsonPath/zipball/cf452d46232ab5b9ac1846eaaebd609fcf49bdef",
-                "reference": "cf452d46232ab5b9ac1846eaaebd609fcf49bdef",
+                "url": "https://api.github.com/repos/Peekmo/JsonPath/zipball/b5e14d95473932a236fdbff8f3c8e9f5f533e7eb",
+                "reference": "b5e14d95473932a236fdbff8f3c8e9f5f533e7eb",
                 "shasum": ""
             },
             "require": {
@@ -314,7 +314,7 @@
             ],
             "description": "Library to use JsonPath",
             "homepage": "https://github.com/Peekmo/JsonPath",
-            "time": "2014-04-11 13:53:10"
+            "time": "2014-05-18 12:18:50"
         },
         {
             "name": "seld/jsonlint",
