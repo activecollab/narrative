@@ -3,6 +3,7 @@
   namespace ActiveCollab\Narrative\StoryElement;
 
   use ActiveCollab\Narrative\Error\NoValidatorError;
+  use ActiveCollab\Narrative\Error\ValidationError;
   use ActiveCollab\Narrative\Error\ValidatorParamsError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use ActiveCollab\Narrative\Error\RequestMethodError;
@@ -78,6 +79,10 @@
           $request_time = method_exists($e, 'getRequestTime') ? $e->getRequestTime() : null;
         } else {
           $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
+
+          if(method_exists($e, 'getServerResponse')) {
+            print_r($e->getServerResponse());
+          }
         }
       }
 
