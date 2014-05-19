@@ -315,6 +315,30 @@
                   }
 
                   break;
+                case 'has':
+                  if(is_array($fetch)) {
+                    if(in_array($compare_data, $fetch)) {
+                      $passes[] = 'Value ' . $this->verboseVariableValue($compare_data) . " found in '{$path}'";
+                    } else {
+                      $failures[] = 'Value ' . $this->verboseVariableValue($compare_data) . " not found in '{$path}' (" . $this->verboseVariableValue($fetch) . ")";
+                    }
+                  } else {
+                    $failures[] = "Value at '{$path}' is not an array";
+                  }
+
+                  break;
+                case 'has_not':
+                  if(is_array($fetch)) {
+                    if(!in_array($compare_data, $fetch)) {
+                      $passes[] = 'Value ' . $this->verboseVariableValue($compare_data) . " not found in '{$path}'";
+                    } else {
+                      $failures[] = 'Value ' . $this->verboseVariableValue($compare_data) . " found in '{$path}' (" . $this->verboseVariableValue($fetch) . ")";
+                    }
+                  } else {
+                    $failures[] = "Value at '{$path}' is not an array";
+                  }
+
+                  break;
               }
             } else {
               throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
