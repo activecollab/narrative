@@ -315,6 +315,20 @@
                   }
 
                   break;
+                case 'is_array':
+                  if(is_array($fetch)) {
+                    $passes[] = "Value at '{$path}' is an array";
+                  } else {
+                    $failures[] = "Value at '{$path}' is not an array";
+                  }
+                  break;
+                case 'is_empty_array':
+                  if(is_array($fetch) && count($fetch) === 0) {
+                    $passes[] = "Value at '{$path}' is an empty array";
+                  } else {
+                    $failures[] = "Value at '{$path}' is not an empty array";
+                  }
+                  break;
                 case 'has':
                   if(is_array($fetch)) {
                     if(in_array($compare_data, $fetch)) {
