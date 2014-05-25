@@ -329,6 +329,20 @@
                     $failures[] = "Value at '{$path}' is not an empty array";
                   }
                   break;
+                case 'is_email':
+                  if(filter_var($fetch, FILTER_VALIDATE_EMAIL)) {
+                    $passes[] = "Value at '{$path}' is a valid email address: " . $this->verboseVariableValue($fetch);
+                  } else {
+                    $failures[] = "Value at '{$path}' is a not a valid email address: " . $this->verboseVariableValue($fetch);
+                  } // if
+                  break;
+                case 'is_url':
+                  if(filter_var($fetch, FILTER_VALIDATE_URL)) {
+                    $passes[] = "Value at '{$path}' is a valid URL: " . $this->verboseVariableValue($fetch);
+                  } else {
+                    $failures[] = "Value at '{$path}' is a not a valid URL: " . $this->verboseVariableValue($fetch);
+                  } // if
+                  break;
                 case 'has':
                   if(is_array($fetch)) {
                     if(in_array($compare_data, $fetch)) {
@@ -353,6 +367,8 @@
                   }
 
                   break;
+                default:
+                  throw new ValidatorParamsError('json_path', 'Individual JSONPath comparison operator: "' . $compare_operation . '"');
               }
             } else {
               throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
