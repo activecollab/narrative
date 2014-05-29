@@ -315,6 +315,8 @@
                   }
 
                   break;
+
+                // Check if value is an array
                 case 'is_array':
                   if(is_array($fetch)) {
                     $passes[] = "Value at '{$path}' is an array";
@@ -322,6 +324,8 @@
                     $failures[] = "Value at '{$path}' is not an array";
                   }
                   break;
+
+                // Check if value is an empty array
                 case 'is_empty_array':
                   if(is_array($fetch) && count($fetch) === 0) {
                     $passes[] = "Value at '{$path}' is an empty array";
@@ -329,20 +333,21 @@
                     $failures[] = "Value at '{$path}' is not an empty array";
                   }
                   break;
-                case 'is_email':
-                  if(filter_var($fetch, FILTER_VALIDATE_EMAIL)) {
-                    $passes[] = "Value at '{$path}' is a valid email address: " . $this->verboseVariableValue($fetch);
+
+                // Check number of array elements
+                case 'count_elements':
+                  if(is_array($fetch)) {
+                    if(count($fetch) == $compare_data) {
+                      $passes[] = "Found $compare_data element(s) at '{$path}'";
+                    } else {
+                      $failures[] = "Expected to find $compare_data element(s) at '{$path}', but found " . count($fetch);
+                    }
                   } else {
-                    $failures[] = "Value at '{$path}' is a not a valid email address: " . $this->verboseVariableValue($fetch);
-                  } // if
+                    $failures[] = "Value at '{$path}' is not an array";
+                  }
                   break;
-                case 'is_url':
-                  if(filter_var($fetch, FILTER_VALIDATE_URL)) {
-                    $passes[] = "Value at '{$path}' is a valid URL: " . $this->verboseVariableValue($fetch);
-                  } else {
-                    $failures[] = "Value at '{$path}' is a not a valid URL: " . $this->verboseVariableValue($fetch);
-                  } // if
-                  break;
+
+                // Check if value is an array that contains a given value
                 case 'has':
                   if(is_array($fetch)) {
                     if(in_array($compare_data, $fetch)) {
@@ -355,6 +360,8 @@
                   }
 
                   break;
+
+                // Check if value is an array and make sure that it does not contain a given value
                 case 'has_not':
                   if(is_array($fetch)) {
                     if(!in_array($compare_data, $fetch)) {
@@ -367,6 +374,25 @@
                   }
 
                   break;
+
+                // Check if value is a valid email address
+                case 'is_email':
+                  if(filter_var($fetch, FILTER_VALIDATE_EMAIL)) {
+                    $passes[] = "Value at '{$path}' is a valid email address: " . $this->verboseVariableValue($fetch);
+                  } else {
+                    $failures[] = "Value at '{$path}' is a not a valid email address: " . $this->verboseVariableValue($fetch);
+                  } // if
+                  break;
+
+                // Check if value is a valid URL
+                case 'is_url':
+                  if(filter_var($fetch, FILTER_VALIDATE_URL)) {
+                    $passes[] = "Value at '{$path}' is a valid URL: " . $this->verboseVariableValue($fetch);
+                  } else {
+                    $failures[] = "Value at '{$path}' is a not a valid URL: " . $this->verboseVariableValue($fetch);
+                  } // if
+                  break;
+
                 default:
                   throw new ValidatorParamsError('json_path', 'Individual JSONPath comparison operator: "' . $compare_operation . '"');
               }
