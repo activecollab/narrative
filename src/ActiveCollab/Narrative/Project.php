@@ -135,7 +135,7 @@
       foreach($stories as $story) {
         try {
           if($elements = $story->getElements()) {
-            $this->setUp($output);
+            $this->setUp($output, $story);
 
             try {
               $output->writeln('');
@@ -207,9 +207,14 @@
      * Set up the environment before each story
      *
      * @param OutputInterface $output
+     * @param Story|null
      */
-    function setUp(OutputInterface $output) {
-      $output->writeln('Setting up the test environment');
+    function setUp(OutputInterface $output, $story = null) {
+      if($story instanceof Story) {
+        $output->writeln('Setting up the test environment for "' . $story->getName() . '" story');
+      } else {
+        $output->writeln('Setting up the test environment');
+      }
 
       if(isset($this->configuration['set_up']) && is_array($this->configuration['set_up'])) {
         foreach($this->configuration['set_up'] as $command) {
