@@ -318,6 +318,22 @@
 
                   break;
 
+                // Check string length
+                case 'strlen':
+                  if(is_string($fetch)) {
+                    $strlen = mb_strlen($fetch);
+
+                    if($strlen == $compare_data) {
+                      $passes[] = "Value at '{$path}' is " . $this->verboseVariableValue($compare_data) . " characters long";
+                    } else {
+                      $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($strlen) . " characters long. We expected " . $this->verboseVariableValue($compare_data)  . " characters";
+                    }
+                  } else {
+                    $failures[] = "Value at '{$path}' is not a string";
+                  }
+
+                  break;
+
                 // Check if value is an array
                 case 'is_array':
                   if(is_array($fetch)) {

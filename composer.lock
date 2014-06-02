@@ -3,7 +3,7 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "6985e6538e7c58f547a2d95e610d1a65",
+    "hash": "7b9bca0b253bf288333943653b7bc452",
     "packages": [
         {
             "name": "activecollab/activecollab-sdk",
@@ -11,12 +11,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/activecollab-sdk.git",
-                "reference": "e452c7d061aa7cadebc150d8bf9c855ea170cde9"
+                "reference": "9e09a8ca799af7a5673f8429e34e711899eea719"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/f7b9e3f3dc06a2ea8020bb5b4cf0c17cb8a4a011",
-                "reference": "e452c7d061aa7cadebc150d8bf9c855ea170cde9",
+                "reference": "9e09a8ca799af7a5673f8429e34e711899eea719",
                 "shasum": ""
             },
             "require": {
@@ -44,7 +44,7 @@
             "keywords": [
                 "activecollab"
             ],
-            "time": "2014-05-19 06:35:09"
+            "time": "2014-06-02 09:25:26"
         },
         {
             "name": "herrera-io/json",
@@ -370,12 +370,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "50be4f30d0a93404e5d62b05fd7294492cf64c4f"
+                "reference": "402f7d86b1073498812cfa5466132aa190183575"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/50be4f30d0a93404e5d62b05fd7294492cf64c4f",
-                "reference": "50be4f30d0a93404e5d62b05fd7294492cf64c4f",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/402f7d86b1073498812cfa5466132aa190183575",
+                "reference": "402f7d86b1073498812cfa5466132aa190183575",
                 "shasum": ""
             },
             "require": {
@@ -392,7 +392,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "2.5-dev"
+                    "dev-master": "2.6-dev"
                 }
             },
             "autoload": {
@@ -418,7 +418,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "http://symfony.com",
-            "time": "2014-05-15 08:56:35"
+            "time": "2014-05-23 14:36:49"
         }
     ],
     "packages-dev": [
