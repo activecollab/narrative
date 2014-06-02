@@ -3,15 +3,13 @@
   namespace ActiveCollab\Narrative\StoryElement;
 
   use ActiveCollab\Narrative\Error\NoValidatorError;
-  use ActiveCollab\Narrative\Error\ValidationError;
   use ActiveCollab\Narrative\Error\ValidatorParamsError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use ActiveCollab\Narrative\Error\RequestMethodError;
-  use ActiveCollab\SDK\Exceptions\AppException;
-  use ActiveCollab\SDK\Exceptions\CallFailed;
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Output\OutputInterface;
   use Peekmo\JsonPath\JsonStore;
+  use ActiveCollab\Narrative\Project;
 
   use ActiveCollab\SDK\Client as API;
 
@@ -22,6 +20,9 @@
    */
   class Request extends StoryElement {
 
+    /**
+     * Request methods
+     */
     const GET = 'GET';
     const POST = 'POST';
     const PUT = 'PUT';
@@ -51,10 +52,11 @@
     /**
      * Execute the command
      *
+     * @param Project $project
      * @param OutputInterface $output
      * @return array
      */
-    function execute($output) {
+    function execute(Project $project, $output) {
       API::setKey('1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST');
       API::setUrl('http://activecollab.dev/api.php');
 
@@ -65,9 +67,9 @@
           case self::GET:
             $response = API::get($this->getPath()); break;
           case self::POST:
-            $response = API::post($this->getPath(), $this->getPayload(), $this->getAttachments()); break;
+            $response = API::post($this->getPath(), $this->getPayload(), $this->getAttachments($project->getPath())); break;
           case self::PUT:
-            $response = API::put($this->getPath(), $this->getPayload(), $this->getAttachments()); break;
+            $response = API::put($this->getPath(), $this->getPayload()); break;
           case self::DELETE:
             $response = API::delete($this->getPath(), $this->getPayload()); break;
           default:
@@ -480,10 +482,23 @@
     /**
      * Return array of files that need to be uploaded with this request
      *
+     * @param string $project_path
      * @return array
      */
-    function getAttachments() {
-      return [];
+    function getAttachments($project_path) {
+      $result = [];
+
+      if($this->source['files'] && is_array($this->source['files'])) {
+        foreach($this->source['files'] as $file) {
+          $path = $project_path . '/files/' . $file;
+
+          if(is_file($path) && is_readable($path)) {
+            $result[] = $project_path . '/files/' . $file;
+          }
+        }
+      }
+
+      return $result;
     }
 
     /**

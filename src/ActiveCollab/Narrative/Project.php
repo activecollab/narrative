@@ -142,7 +142,7 @@
 
               foreach($elements as $element) {
                 if($element instanceof Request) {
-                  list($response, $passes, $failures) = $element->execute($output);
+                  list($response, $passes, $failures) = $element->execute($this, $output);
 
                   if($response instanceof Response && $element->dumpResponse()) {
                     print $response->getBody();
