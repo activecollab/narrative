@@ -53,10 +53,11 @@
      * Execute the command
      *
      * @param Project $project
+     * @param array $variables
      * @param OutputInterface $output
      * @return array
      */
-    function execute(Project $project, $output) {
+    function execute(Project $project, &$variables, $output) {
       API::setKey('1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST');
       API::setUrl('http://activecollab.dev/api.php');
 
@@ -67,11 +68,11 @@
           case self::GET:
             $response = API::get($this->getPath()); break;
           case self::POST:
-            $response = API::post($this->getPath(), $this->getPayload(), $this->getAttachments($project->getPath())); break;
+            $response = API::post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath())); break;
           case self::PUT:
-            $response = API::put($this->getPath(), $this->getPayload()); break;
+            $response = API::put($this->getPath(), $this->getPayload($variables)); break;
           case self::DELETE:
-            $response = API::delete($this->getPath(), $this->getPayload()); break;
+            $response = API::delete($this->getPath(), $this->getPayload($variables)); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
@@ -92,6 +93,7 @@
         $passes = $failures = [];
 
         $this->validate($response, $passes, $failures);
+        $this->fetchVariables($response, $variables, $failures);
         $this->printRequestStatusLine($response, $passes, $failures, $request_time, $output);
 
         return [ $response, $passes, $failures ];
@@ -426,6 +428,44 @@
       }
     }
 
+    // ---------------------------------------------------
+    //  Variables
+    // ---------------------------------------------------
+
+    /**
+     * Update list of variables collected by the story
+     *
+     * @param Response $response
+     * @param array $variables
+     * @param array $failures
+     */
+    protected function fetchVariables($response, array &$variables, array &$failures) {
+      if(isset($this->source['fetch']) && is_array($this->source['fetch']) && count($this->source['fetch'])) {
+        if($response instanceof Response && $response->isJson()) {
+          $json = $response->getJson();
+
+          foreach($this->source['fetch'] as $variable_name => $path) {
+            list($path, $fetch_first) = $this->processJsonPath($path);
+
+            $store = new JsonStore();
+            $fetch = $store->get($json, $path);
+
+            if($fetch_first && is_array($fetch)) {
+              $fetch = array_shift($fetch);
+            }
+
+            $variables[$variable_name] = $fetch;
+          }
+        } else {
+          $failures[] = 'Failed to fetch variables. Response is not JSON';
+        }
+      }
+    }
+
+    // ---------------------------------------------------
+    //  Utils
+    // ---------------------------------------------------
+
     /**
      * Process JSONPath and see if we need to featch first element or an entire array
      *
@@ -489,10 +529,27 @@
     /**
      * Return request payload
      *
+     * @param array $variables
      * @return array|null
      */
-    function getPayload() {
-      return isset($this->source['payload']) ? $this->source['payload'] : null;
+    function getPayload(array $variables) {
+      if(isset($this->source['payload']) && is_array($this->source['payload'])) {
+        $result = $this->source['payload'];
+
+        foreach($this->source['payload'] as $k => $v) {
+          if(is_string($v) && substr($v, 0, 1) === '$') {
+            $var_name = substr($v, 1);
+
+            if(isset($variables[$var_name])) {
+              $result[$k] = $variables[$var_name];
+            }
+          }
+        }
+
+        return $result;
+      }
+
+      return null;
     }
 
     /**
@@ -506,10 +563,17 @@
 
       if($this->source['files'] && is_array($this->source['files'])) {
         foreach($this->source['files'] as $file) {
-          $path = $project_path . '/files/' . $file;
+          if(is_array($file)) {
+            list($filename, $mime_type) = $file;
+          } else {
+            $filename = $file;
+            $mime_type = 'application/octet-stream';
+          }
+
+          $path = $project_path . '/files/' . $filename;
 
           if(is_file($path) && is_readable($path)) {
-            $result[] = $project_path . '/files/' . $file;
+            $result[] = [ $path, $mime_type ];
           }
         }
       }

@@ -140,9 +140,11 @@
             try {
               $output->writeln('');
 
+              $variables = [];
+
               foreach($elements as $element) {
                 if($element instanceof Request) {
-                  list($response, $passes, $failures) = $element->execute($this, $output);
+                  list($response, $passes, $failures) = $element->execute($this, $variables, $output);
 
                   if($response instanceof Response && $element->dumpResponse()) {
                     print $response->getBody();
