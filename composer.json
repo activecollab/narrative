@@ -6,6 +6,8 @@
     "symfony/console" : "~2.3",
     "herrera-io/phar-update" : "~1.0",
     "peekmo/jsonpath": "dev-master",
+    "michelf/php-markdown": "1.4.*@dev",
+    "twig/twig": "1.16.*@dev",
     "activecollab/activecollab-sdk": "dev-develop#256cfa45887e82e4750df7b88b6397ef8c737f17"
   },
   "minimum-stability": "dev",

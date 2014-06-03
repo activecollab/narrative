@@ -77,8 +77,8 @@
             throw new RequestMethodError($this->getMethod());
         }
       } catch(\Exception $e) {
-        if(method_exists($e, 'getHttpCode') && $e->getHttpCode() === 404) {
-          $response = 404;
+        if(method_exists($e, 'getHttpCode') && in_array($e->getHttpCode(), [ 400, 403, 404 ])) {
+          $response = $e->getHttpCode();
           $request_time = method_exists($e, 'getRequestTime') ? $e->getRequestTime() : null;
         } else {
           $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
