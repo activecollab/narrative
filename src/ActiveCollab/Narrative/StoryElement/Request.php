@@ -536,21 +536,45 @@
       if(isset($this->source['payload']) && is_array($this->source['payload'])) {
         $result = $this->source['payload'];
 
-        foreach($this->source['payload'] as $k => $v) {
-          if(is_string($v) && substr($v, 0, 1) === '$') {
-            $var_name = substr($v, 1);
-
-            if(isset($variables[$var_name])) {
-              $result[$k] = $variables[$var_name];
-            }
-          }
-        }
+        $this->applyVariablesToArray($result, $variables);
 
         return $result;
+
+//        foreach($this->source['payload'] as $k => $v) {
+//          if(is_string($v) && substr($v, 0, 1) === '$') {
+//            $var_name = substr($v, 1);
+//
+//            if(isset($variables[$var_name])) {
+//              $result[$k] = $variables[$var_name];
+//            }
+//          }
+//        }
+//
+//        return $result;
       }
 
       return null;
     }
+
+    /**
+     * Apply variables to the input array
+     *
+     * @param array $input
+     * @param array $variables
+     */
+    private function applyVariablesToArray(array &$input, array $variables) {
+      foreach($input as $k => $v) {
+        if(is_array($v)) {
+          $this->applyVariablesToArray($input[$k], $variables);
+        } elseif(is_string($v) && substr($v, 0, 1) === '$') {
+          $var_name = substr($v, 1);
+
+          if(isset($variables[$var_name])) {
+            $input[$k] = $variables[$var_name];
+          }
+        }
+      }
+    } // applyVariablesToArray
 
     /**
      * Return array of files that need to be uploaded with this request
