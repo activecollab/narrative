@@ -8,7 +8,7 @@
     "peekmo/jsonpath": "dev-master",
     "michelf/php-markdown": "1.4.*@dev",
     "twig/twig": "1.16.*@dev",
-    "activecollab/activecollab-sdk": "dev-develop#256cfa45887e82e4750df7b88b6397ef8c737f17"
+    "activecollab/activecollab-sdk": "dev-develop#84ce4ec6999cfdae6b351f0ff7dd97d86f1c548c"
   },
   "minimum-stability": "dev",
   "autoload": {

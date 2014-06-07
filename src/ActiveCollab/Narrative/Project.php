@@ -146,10 +146,6 @@
                 if($element instanceof Request) {
                   list($response, $passes, $failures) = $element->execute($this, $variables, $output);
 
-                  if($response instanceof Response && $element->dumpResponse()) {
-                    print $response->getBody();
-                  }
-
                   $total_requests++;
 
                   if(empty($response) || is_array($failures) && count($failures)) {

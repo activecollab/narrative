@@ -77,16 +77,11 @@
             throw new RequestMethodError($this->getMethod());
         }
       } catch(\Exception $e) {
-        if(method_exists($e, 'getHttpCode') && in_array($e->getHttpCode(), [ 400, 403, 404 ])) {
-          $response = $e->getHttpCode();
-          $request_time = method_exists($e, 'getRequestTime') ? $e->getRequestTime() : null;
-        } else {
-          $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
+        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
 
-          if(method_exists($e, 'getServerResponse')) {
-            print_r($e->getServerResponse());
-          }
-        }
+        if(method_exists($e, 'getServerResponse')) {
+          print_r($e->getServerResponse());
+        } // if
       }
 
       if($response) {
@@ -134,9 +129,11 @@
       }
 
       // Output response, if needed
-      if(isset($this->source['dump_response']) && $this->source['dump_response'] && $response instanceof Response) {
+      if($this->dumpResponse() && $response instanceof Response) {
         if($response->isJson()) {
+          ob_start();
           print_r($response->getJson());
+          $output->write(ob_get_clean());
         } else {
           $output->writeln($response->getBody());
         }
