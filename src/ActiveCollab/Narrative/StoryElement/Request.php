@@ -536,18 +536,6 @@
         $this->applyVariablesToArray($result, $variables);
 
         return $result;
-
-//        foreach($this->source['payload'] as $k => $v) {
-//          if(is_string($v) && substr($v, 0, 1) === '$') {
-//            $var_name = substr($v, 1);
-//
-//            if(isset($variables[$var_name])) {
-//              $result[$k] = $variables[$var_name];
-//            }
-//          }
-//        }
-//
-//        return $result;
       }
 
       return null;
