@@ -4,7 +4,7 @@
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "be13c4203ca3cc78a40d43bbc22f06eb",
+    "hash": "d5b9fced1ac1a3045bd2e6272a231b07",
     "packages": [
         {
             "name": "activecollab/activecollab-sdk",
@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/activecollab/activecollab-sdk.git",
-                "reference": "3fe3dd67d1681378068936abc5f3c47cf677ad7e"
+                "reference": "ded689f8eeefa64d9d90663cdb26dbd0a9ac2e49"
             },
             "dist": {
                 "type": "zip",
                 "url": "https://api.github.com/repos/activecollab/activecollab-sdk/zipball/f7b9e3f3dc06a2ea8020bb5b4cf0c17cb8a4a011",
-                "reference": "3fe3dd67d1681378068936abc5f3c47cf677ad7e",
+                "reference": "ded689f8eeefa64d9d90663cdb26dbd0a9ac2e49",
                 "shasum": ""
             },
             "require": {
@@ -45,7 +45,7 @@
             "keywords": [
                 "activecollab"
             ],
-            "time": "2014-06-10 09:12:21"
+            "time": "2014-06-10 10:14:59"
         },
         {
             "name": "herrera-io/json",
