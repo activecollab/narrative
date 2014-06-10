@@ -8,6 +8,7 @@
     "peekmo/jsonpath": "dev-master",
     "michelf/php-markdown": "1.4.*@dev",
     "twig/twig": "1.16.*@dev",
+    "razielanarki/hyperlight": "dev-master",
     "activecollab/activecollab-sdk": "dev-develop#ded689f8eeefa64d9d90663cdb26dbd0a9ac2e49"
   },
   "minimum-stability": "dev",
