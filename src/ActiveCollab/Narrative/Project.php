@@ -80,19 +80,15 @@
       $result = [];
 
       if(is_dir("$this->path/stories")) {
+        foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator("$this->path/stories")) as $file) {
 
-        /**
-         * @var \DirectoryIterator[] $dir
-         */
-        $dir = new \DirectoryIterator("$this->path/stories");
-
-        foreach($dir as $file) {
-          if($file->isDot() || $file->isDir() || substr($file->getBasename(), 0, 1) === '.' || $file->getExtension() != 'narr') {
-            continue;
+          /**
+           * @var \DirectoryIterator $file
+           */
+          if(substr($file->getBasename(), 0, 1) != '.' && $file->getExtension() == 'narr') {
+            $result[] = new Story($file->getPathname());
           } // if
-
-          $result[] = new Story($file->getPathname());
-        }
+        } // foreach
       }
 
       return $result;
