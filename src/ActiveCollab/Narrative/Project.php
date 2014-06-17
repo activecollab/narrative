@@ -2,14 +2,14 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative\Story;
   use ActiveCollab\Narrative\StoryElement\Request;
   use ActiveCollab\SDK\Exception;
-  use ActiveCollab\SDK\Response;
   use ActiveCollab\Narrative\Error\CommandError;
   use ActiveCollab\Narrative\Error\ParseError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
   use Symfony\Component\Console\Output\OutputInterface;
+  use ActiveCollab\Narrative\Connector\Connector;
+  use ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector;
 
   /**
    * Narrative project
@@ -69,6 +69,24 @@
      */
     function getPath() {
       return $this->path;
+    }
+
+    /**
+     * Connector instance
+     *
+     * @var Connector
+     */
+    private $connector = false;
+
+    /**
+     * @return Connector
+     */
+    function &getConnector() {
+      if($this->connector === false) {
+        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://activecollab.dev/api.php', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
+      }
+
+      return $this->connector;
     }
 
     /**

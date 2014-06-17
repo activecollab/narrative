@@ -11,8 +11,6 @@
   use Peekmo\JsonPath\JsonStore;
   use ActiveCollab\Narrative\Project;
 
-  use ActiveCollab\SDK\Client as API;
-
   /**
    * HTTP request element
    *
@@ -58,21 +56,20 @@
      * @return array
      */
     function execute(Project $project, &$variables, $output) {
-      API::setKey('1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST');
-      API::setUrl('http://activecollab.dev/api.php');
+      $connector = $project->getConnector();
 
       $response = $request_time = null;
 
       try {
         switch($this->getMethod()) {
           case self::GET:
-            $response = API::get($this->getPath()); break;
+            $response = $connector->get($this->getPath()); break;
           case self::POST:
-            $response = API::post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath())); break;
+            $response = $connector->post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath())); break;
           case self::PUT:
-            $response = API::put($this->getPath(), $this->getPayload($variables)); break;
+            $response = $connector->put($this->getPath(), $this->getPayload($variables)); break;
           case self::DELETE:
-            $response = API::delete($this->getPath(), $this->getPayload($variables)); break;
+            $response = $connector->delete($this->getPath(), $this->getPayload($variables)); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
