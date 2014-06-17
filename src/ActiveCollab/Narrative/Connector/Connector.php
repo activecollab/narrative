@@ -3,6 +3,7 @@
   namespace ActiveCollab\Narrative\Connector;
 
   use ActiveCollab\Narrative\Error\ConnectorError;
+  use ActiveCollab\SDK\Response;
 
   /**
    * Basic connector
@@ -77,5 +78,13 @@
     function addPersona($name, array $params = []) {
       $this->personas[$name] = (array) $params;
     }
+
+    /**
+     * Create a new persona based on a response
+     *
+     * @param string $name
+     * @param mixed $response
+     */
+    abstract function addPersonaFromResponse($name, $response);
 
   }

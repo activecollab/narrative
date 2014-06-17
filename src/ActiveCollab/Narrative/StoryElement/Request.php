@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\Narrative\StoryElement;
 
+  use ActiveCollab\Narrative\Connector\Connector;
   use ActiveCollab\Narrative\Error\NoValidatorError;
   use ActiveCollab\Narrative\Error\ValidatorParamsError;
   use ActiveCollab\Narrative\Error\ParseJsonError;
@@ -63,13 +64,13 @@
       try {
         switch($this->getMethod()) {
           case self::GET:
-            $response = $connector->get($this->getPath()); break;
+            $response = $connector->get($this->getPath(), $this->executeAs()); break;
           case self::POST:
-            $response = $connector->post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath())); break;
+            $response = $connector->post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
           case self::PUT:
-            $response = $connector->put($this->getPath(), $this->getPayload($variables)); break;
+            $response = $connector->put($this->getPath(), $this->getPayload($variables), null, $this->executeAs()); break;
           case self::DELETE:
-            $response = $connector->delete($this->getPath(), $this->getPayload($variables)); break;
+            $response = $connector->delete($this->getPath(), $this->getPayload($variables), $this->executeAs()); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
@@ -86,7 +87,15 @@
 
         $this->validate($response, $passes, $failures);
         $this->fetchVariables($response, $variables, $failures);
-        $this->printRequestStatusLine($response, $passes, $failures, $request_time, $output);
+        $this->printRequestStatusLine($response, $passes, $failures, $request_time, $this->executeAs(), $output);
+
+        if(empty($failures) && $this->createPersona()) {
+          $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
+
+          if($token) {
+            $output->writeln("<comment>Info: Persona '" . $this->createPersona() . "' has been created (access token '{$token}')</comment>");
+          }
+        }
 
         return [ $response, $passes, $failures ];
       } else {
@@ -101,9 +110,10 @@
      * @param array $passes
      * @param array $failures
      * @param float|null $request_time
+     * @param string $persona
      * @param OutputInterface $output
      */
-    private function printRequestStatusLine($response, $passes, $failures, $request_time, OutputInterface $output) {
+    private function printRequestStatusLine($response, $passes, $failures, $request_time, $persona, OutputInterface $output) {
       if(empty($failures)) {
         $color = 'info';
       } else {
@@ -114,8 +124,9 @@
       $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
       $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
       $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
+      $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
 
-      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . " - {$http_code} in {$request_time} seconds</$color> {$prep}");
+      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
 
       // Output failure lines
       if(count($failures)) {
@@ -603,6 +614,24 @@
      */
     function dumpResponse() {
       return isset($this->source['dump_response']) && $this->source['dump_response'];
+    }
+
+    /**
+     * Return name of the person that this request should be executed as
+     *
+     * @return bool
+     */
+    function executeAs() {
+      return isset($this->source['as']) && $this->source['as'] ? $this->source['as'] : Connector::DEFAULT_PERSONA;
+    }
+
+    /**
+     * Create a new persona based on a response
+     *
+     * @return string|null
+     */
+    function createPersona() {
+      return isset($this->source['persona']) && $this->source['persona'] ? $this->source['persona'] : null;
     }
 
     /**

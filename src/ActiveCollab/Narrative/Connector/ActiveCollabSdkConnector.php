@@ -86,4 +86,63 @@
       return API::delete($path, $params);
     }
 
+    /**
+     * Create a new persona based on a response
+     *
+     * @param string $name
+     * @param Response $response
+     * @return string
+     * @throws \ActiveCollab\Narrative\Error\ConnectorError
+     */
+    function addPersonaFromResponse($name, $response) {
+      $user_id = $this->isUserResponse($response);
+
+      if($user_id !== false) {
+        $subscription = $this->post("/users/{$user_id}/api-subscriptions", [ 'client_vendor' => 'ActiveCollab', 'client_name' => 'Narrative' ]);
+
+        if($token = $this->isSubscriptionResponse($subscription)) {
+          $this->addPersona($name, [ 'token' => $token ]);
+          return $token;
+        }
+      } // if
+
+      throw new ConnectorError('Invalid response');
+    }
+
+    /**
+     * Check if $response is a valid user response and return user ID
+     *
+     * @param Response $response
+     * @return integer|false
+     */
+    private function isUserResponse($response) {
+      if($response instanceof Response && $response->isJson()) {
+        $json = $response->getJson();
+
+        if(isset($json['single']) && isset($json['single']['id']) && $json['single']['id'] && isset($json['single']['class']) && in_array($json['single']['class'], [ 'Client', 'Subcontractor', 'Member', 'Owner' ])) {
+          return $json['single']['id'];
+        } // if
+      } // if
+
+      return false;
+    } // isUserResponse
+
+    /**
+     * Check if $response is a valid subscription response and return subscription token
+     *
+     * @param Response $response
+     * @return integer|false
+     */
+    private function isSubscriptionResponse($response) {
+      if($response instanceof Response && $response->isJson()) {
+        $json = $response->getJson();
+
+        if(isset($json['single']) && isset($json['single']['class']) && $json['single']['class'] = 'ApiSubscription') {
+          return $json['single']['token'];
+        } // if
+      } // if
+
+      return false;
+    } // isSubscriptionResponse
+
   }
