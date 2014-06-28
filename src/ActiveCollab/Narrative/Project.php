@@ -3,6 +3,7 @@
   namespace ActiveCollab\Narrative;
 
   use ActiveCollab\Narrative\StoryElement\Request;
+  use ActiveCollab\Narrative\StoryElement\Sleep;
   use ActiveCollab\SDK\Exception;
   use ActiveCollab\Narrative\Error\CommandError;
   use ActiveCollab\Narrative\Error\ParseError;
@@ -175,6 +176,8 @@
                     $total_assertions += count($failures);
                     $total_failures += count($failures);
                   }
+                } elseif($element instanceof Sleep) {
+                  $element->execute($this, $output);
                 }
               }
             } catch(Exception $e) {

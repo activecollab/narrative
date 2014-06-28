@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\Narrative;
 
+  use ActiveCollab\Narrative\StoryElement\Sleep;
   use ActiveCollab\Narrative\StoryElement\StoryElement;
   use ActiveCollab\Narrative\StoryElement\Text;
   use ActiveCollab\Narrative\StoryElement\Request;
@@ -68,6 +69,8 @@
             $current_element = null;
           } elseif($current_element instanceof Request) {
             throw new ParseError("Can't open a request on line {$line_number} because request is already open, but not closed");
+          } elseif($current_element instanceof Sleep) {
+            throw new ParseError("Can't open a sleep command on line {$line_number} because sleep command is already open, but not closed");
           } // if
         }
 
@@ -80,14 +83,16 @@
             $current_element = new Request(Request::PUT); break;
           case 'DELETE {':
             $current_element = new Request(Request::DELETE); break;
+          case 'SLEEP {':
+            $current_element = new Sleep(); break;
 
-          // Close a request
+          // Close a block
           case '}':
-            if($current_element instanceof Request) {
+            if($current_element instanceof Sleep || $current_element instanceof Request) {
               $result[] = $current_element->doneAddingLines();
               $current_element = null;
             } else {
-              throw new ParseError("Can't close a request on line {$line_number}. There is no request open");
+              throw new ParseError("Can't close a request or sleep command on line {$line_number}. There is no request open");
             }
 
             break;

@@ -300,6 +300,8 @@
               }
 
               switch($compare_operation) {
+
+                // Set
                 case 'exists':
                   if($fetch) {
                     $passes[] = "Value found at {$path}";
@@ -308,6 +310,18 @@
                   }
 
                   break;
+
+                // Not set
+                case 'is_empty':
+                  if(empty($fetch)) {
+                    $passes[] = "Value at {$path} is empty";
+                  } else {
+                    $failures[] = "Value at {$path} is not empty";
+                  }
+
+                  break;
+
+                // Is equal
                 case 'is':
                   if($fetch === $compare_data) {
                     $passes[] = "Value at '{$path}' is " . $this->verboseVariableValue($compare_data);
@@ -316,6 +330,8 @@
                   }
 
                   break;
+
+                // Is not
                 case 'is_not':
                   if($fetch !== $compare_data) {
                     $passes[] = "Value at {$path} is not " . $this->verboseVariableValue($compare_data);
