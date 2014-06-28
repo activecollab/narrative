@@ -217,6 +217,46 @@
     }
 
     /**
+     * Validate if we got proper content type
+     *
+     * @param mixed $validator_data
+     * @param Response|int $response
+     * @param array $passes
+     * @param array $failures
+     */
+    protected function validateContentType($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response) {
+        if($response->getContentType() == $validator_data) {
+          $passes[] = "Got " . $response->getContentType();
+        } else {
+          $failures[] = 'Expected ' . $validator_data . ', got ' . $response->getContentType();
+        }
+      } else {
+        $failures[] = 'We need a response instance to check for content type';
+      }
+    }
+
+    /**
+     * Validate if we got proper content length
+     *
+     * @param mixed $validator_data
+     * @param Response|int $response
+     * @param array $passes
+     * @param array $failures
+     */
+    protected function validateContentLength($validator_data, &$response, array &$passes, array &$failures) {
+      if($response instanceof Response) {
+        if($response->getContentLength() == $validator_data) {
+          $passes[] = "Content length is " . $response->getContentLength();
+        } else {
+          $failures[] = 'Expected ' . $validator_data . ' bytes, got ' . $response->getContentLength() . ' bytes';
+        }
+      } else {
+        $failures[] = 'We need a response instance to check for content length';
+      }
+    }
+
+    /**
      * Validate if we response is JSON response
      *
      * @param mixed $validator_data
