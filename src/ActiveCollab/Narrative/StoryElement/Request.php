@@ -85,6 +85,10 @@
       if($response) {
         $passes = $failures = [];
 
+        if($response instanceof Response && $response->getHttpCode() === 500) {
+          $this->source['dump_response'] = true;
+        }
+
         $this->validate($response, $passes, $failures);
         $this->fetchVariables($response, $variables, $failures);
         $this->printRequestStatusLine($response, $passes, $failures, $request_time, $this->executeAs(), $output);
