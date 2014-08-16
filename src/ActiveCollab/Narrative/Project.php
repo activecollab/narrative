@@ -84,7 +84,7 @@
      */
     function &getConnector() {
       if($this->connector === false) {
-        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://activecollab.dev/api.php', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
+        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://activecollab.back//api.php', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
       }
 
       return $this->connector;

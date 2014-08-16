@@ -79,14 +79,18 @@
 
         if(method_exists($e, 'getServerResponse')) {
           print_r($e->getServerResponse());
-        } // if
+        }
       }
 
       if($response) {
         $passes = $failures = [];
 
         if($response instanceof Response && $response->getHttpCode() === 500) {
-          $this->source['dump_response'] = true;
+          if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
+            // If dump_response is explicitly set to FALSE, don't turn it on
+          } else {
+            $this->source['dump_response'] = true;
+          }
         }
 
         $this->validate($response, $passes, $failures);
