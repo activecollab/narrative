@@ -19,14 +19,19 @@
      * @param array $parameters
      * @throws ConnectorError
      */
-    function __construct(array $parameters) {
-      if(isset($parameters['url']) && $parameters['url']) {
+    function __construct(array $parameters)
+    {
+      if (isset($parameters['url']) && $parameters['url']) {
         API::setUrl($parameters['url']);
       } else {
         throw new ConnectorError('URL required');
       }
 
-      if(isset($parameters['token']) && $parameters['token']) {
+      if (isset($parameters['api_version']) && $parameters['api_version']) {
+        API::setApiVersion($parameters['api_version']);
+      }
+
+      if (isset($parameters['token']) && $parameters['token']) {
         $this->addPersona(Connector::DEFAULT_PERSONA, [ 'token' => $parameters['token'] ]);
       } else {
         throw new ConnectorError('URL required');
@@ -40,7 +45,8 @@
      * @param string $persona
      * @return Response
      */
-    function get($path, $persona = Connector::DEFAULT_PERSONA) {
+    function get($path, $persona = Connector::DEFAULT_PERSONA)
+    {
       API::setKey($this->getPersona($persona)['token']);
       return API::get($path);
     }
@@ -54,7 +60,8 @@
      * @param string $persona
      * @return Response
      */
-    function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA) {
+    function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
+    {
       API::setKey($this->getPersona($persona)['token']);
       return Api::post($path, $params, $attachments);
     }
@@ -68,7 +75,8 @@
      * @param string $persona
      * @return Response
      */
-    function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA) {
+    function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
+    {
       API::setKey($this->getPersona($persona)['token']);
       return API::put($path, $params, $attachments);
     }
@@ -81,7 +89,8 @@
      * @param string $persona
      * @return Response
      */
-    function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA) {
+    function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA)
+    {
       API::setKey($this->getPersona($persona)['token']);
       return API::delete($path, $params);
     }
@@ -94,7 +103,8 @@
      * @return string
      * @throws \ActiveCollab\Narrative\Error\ConnectorError
      */
-    function addPersonaFromResponse($name, $response) {
+    function addPersonaFromResponse($name, $response)
+    {
       $user_id = $this->isUserResponse($response);
 
       if($user_id !== false) {
@@ -115,7 +125,8 @@
      * @param Response $response
      * @return integer|false
      */
-    private function isUserResponse($response) {
+    private function isUserResponse($response)
+    {
       if($response instanceof Response && $response->isJson()) {
         $json = $response->getJson();
 
@@ -125,7 +136,7 @@
       } // if
 
       return false;
-    } // isUserResponse
+    }
 
     /**
      * Check if $response is a valid subscription response and return subscription token
@@ -133,7 +144,8 @@
      * @param Response $response
      * @return integer|false
      */
-    private function isSubscriptionResponse($response) {
+    private function isSubscriptionResponse($response)
+    {
       if($response instanceof Response && $response->isJson()) {
         $json = $response->getJson();
 
@@ -143,6 +155,6 @@
       } // if
 
       return false;
-    } // isSubscriptionResponse
+    }
 
   }

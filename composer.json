@@ -9,7 +9,7 @@
     "michelf/php-markdown": "1.4.*@dev",
     "twig/twig": "1.16.*@dev",
     "razielanarki/hyperlight": "dev-master",
-    "activecollab/activecollab-sdk": "dev-develop#ded689f8eeefa64d9d90663cdb26dbd0a9ac2e49"
+    "activecollab/activecollab-sdk": "dev-develop#a2fad72852fbd8cfeb62605c5d261c87b43777f1"
   },
   "minimum-stability": "dev",
   "autoload": {
