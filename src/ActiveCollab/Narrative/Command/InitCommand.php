@@ -14,7 +14,6 @@
    */
   class InitCommand extends Command
   {
-
     /**
      * Configure the command
      */
@@ -40,5 +39,4 @@
 
       }
     }
-
   }

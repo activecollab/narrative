@@ -2,15 +2,12 @@
 
   namespace ActiveCollab\Narrative\StoryElement;
 
-  use ActiveCollab\Narrative\Connector\Connector;
-  use ActiveCollab\Narrative\Error\NoValidatorError;
-  use ActiveCollab\Narrative\Error\ValidatorParamsError;
-  use ActiveCollab\Narrative\Error\ParseJsonError;
-  use ActiveCollab\Narrative\Error\RequestMethodError;
+  use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Connector\Connector;
+  use ActiveCollab\Narrative\Error\NoValidatorError, ActiveCollab\Narrative\Error\ValidatorParamsError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\RequestMethodError;
   use ActiveCollab\SDK\Response;
-  use Symfony\Component\Console\Output\OutputInterface;
+  use Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table;
   use Peekmo\JsonPath\JsonStore;
-  use ActiveCollab\Narrative\Project;
+  use League\Csv\Reader;
 
   /**
    * HTTP request element
@@ -64,13 +61,13 @@
       try {
         switch($this->getMethod()) {
           case self::GET:
-            $response = $connector->get($this->getPath(), $this->executeAs()); break;
+            $response = $connector->get($this->getPathWithQueryString(), $this->executeAs()); break;
           case self::POST:
-            $response = $connector->post($this->getPath(), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
+            $response = $connector->post($this->getPathWithQueryString(), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
           case self::PUT:
-            $response = $connector->put($this->getPath(), $this->getPayload($variables), null, $this->executeAs()); break;
+            $response = $connector->put($this->getPathWithQueryString(), $this->getPayload($variables), null, $this->executeAs()); break;
           case self::DELETE:
-            $response = $connector->delete($this->getPath(), $this->getPayload($variables), $this->executeAs()); break;
+            $response = $connector->delete($this->getPathWithQueryString(), $this->getPayload($variables), $this->executeAs()); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
@@ -134,7 +131,7 @@
       $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
       $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
 
-      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPath() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
+      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPathWithQueryString() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
 
       // Output failure lines
       if(count($failures)) {
@@ -146,10 +143,31 @@
 
       // Output response, if needed
       if($this->dumpResponse() && $response instanceof Response) {
+
+        // JSON
         if($response->isJson()) {
           ob_start();
           print_r($response->getJson());
           $output->write(ob_get_clean());
+
+        // CSV
+        } elseif ($response->getContentType() == 'text/csv') {
+          $table = new Table($output);
+
+          $header_rendered = false;
+
+          foreach (Reader::createFromString($response->getBody())->fetchAll() as $row) {
+            if ($header_rendered) {
+              $table->addRow($row);
+            } else {
+              $table->setHeaders($row);
+              $header_rendered = true;
+            }
+          }
+
+          $table->render();
+
+        // Plain text
         } else {
           $output->writeln($response->getBody());
         }
@@ -340,8 +358,8 @@
 
               list($path, $fetch_first) = $this->processJsonPath($path);
 
-              $store = new JsonStore();
-              $fetch = $store->get($json, $path);
+              $store = new JsonStore($json);
+              $fetch = $store->get($path);
 
               if($fetch_first && is_array($fetch)) {
                 $fetch = array_shift($fetch);
@@ -385,6 +403,26 @@
                     $passes[] = "Value at {$path} is not " . $this->verboseVariableValue($compare_data);
                   } else {
                     $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($compare_data) . ". It is not what we expected";
+                  }
+
+                  break;
+
+                // Is lower than
+                case 'is_lower_than':
+                  if($fetch < $compare_data) {
+                    $passes[] = "Value at '{$path}' is lower than " . $this->verboseVariableValue($compare_data);
+                  } else {
+                    $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($fetch) . ", we expected it to be lower than " . $this->verboseVariableValue($compare_data);
+                  }
+
+                  break;
+
+                // Is greater than
+                case 'is_greater_than':
+                  if($fetch > $compare_data) {
+                    $passes[] = "Value at '{$path}' is greater than " . $this->verboseVariableValue($compare_data);
+                  } else {
+                    $failures[] = "Value at '{$path}' is " . $this->verboseVariableValue($fetch) . ", we expected it to be greater than " . $this->verboseVariableValue($compare_data);
                   }
 
                   break;
@@ -470,7 +508,7 @@
                     $passes[] = "Value at '{$path}' is a valid email address: " . $this->verboseVariableValue($fetch);
                   } else {
                     $failures[] = "Value at '{$path}' is a not a valid email address: " . $this->verboseVariableValue($fetch);
-                  } // if
+                  }
                   break;
 
                 // Check if value is a valid URL
@@ -479,7 +517,7 @@
                     $passes[] = "Value at '{$path}' is a valid URL: " . $this->verboseVariableValue($fetch);
                   } else {
                     $failures[] = "Value at '{$path}' is a not a valid URL: " . $this->verboseVariableValue($fetch);
-                  } // if
+                  }
                   break;
 
                 default:
@@ -516,8 +554,8 @@
           foreach($this->source['fetch'] as $variable_name => $path) {
             list($path, $fetch_first) = $this->processJsonPath($path);
 
-            $store = new JsonStore();
-            $fetch = $store->get($json, $path);
+            $store = new JsonStore($json);
+            $fetch = $store->get($path);
 
             if($fetch_first && is_array($fetch)) {
               $fetch = array_shift($fetch);
@@ -571,7 +609,7 @@
       } else {
         return '(' . gettype($var) . ') "' . (string) $var . '"';
       }
-    } // verboseVariableValue
+    }
 
     // ---------------------------------------------------
     //  Fields and Bits
@@ -593,6 +631,36 @@
      */
     function getPath() {
       return $this->source['path'];
+    }
+
+    /**
+     * Return path with query string attached
+     *
+     * @return string
+     */
+    function getPathWithQueryString()
+    {
+      $path = $this->getPath();
+
+      if (strpos($path, '?') === false) {
+        if (isset($this->source['query']) && is_array($this->source['query'])) {
+          $query_string_params = [];
+
+          foreach ($this->source['query'] as $k => $v) {
+            if (is_array($v)) {
+              $v = implode(',', $v);
+            } elseif (is_bool($v)) {
+              $v = (integer) $v;
+            }
+
+            $query_string_params[$k] = $v;
+          }
+
+          $path .= '?' . http_build_query($query_string_params);
+        }
+      }
+
+      return $path;
     }
 
     /**
@@ -631,7 +699,7 @@
           }
         }
       }
-    } // applyVariablesToArray
+    }
 
     /**
      * Return array of files that need to be uploaded with this request
@@ -642,7 +710,7 @@
     function getAttachments($project_path) {
       $result = [];
 
-      if($this->source['files'] && is_array($this->source['files'])) {
+      if(isset($this->source['files']) && is_array($this->source['files'])) {
         foreach($this->source['files'] as $file) {
           if(is_array($file)) {
             list($filename, $mime_type) = $file;

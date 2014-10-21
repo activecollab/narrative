@@ -114,7 +114,7 @@
           $this->addPersona($name, [ 'token' => $token ]);
           return $token;
         }
-      } // if
+      }
 
       throw new ConnectorError('Invalid response');
     }
@@ -132,8 +132,8 @@
 
         if(isset($json['single']) && isset($json['single']['id']) && $json['single']['id'] && isset($json['single']['class']) && in_array($json['single']['class'], [ 'Client', 'Subcontractor', 'Member', 'Owner' ])) {
           return $json['single']['id'];
-        } // if
-      } // if
+        }
+      }
 
       return false;
     }
@@ -151,8 +151,8 @@
 
         if(isset($json['single']) && isset($json['single']['class']) && $json['single']['class'] = 'ApiSubscription') {
           return $json['single']['token'];
-        } // if
-      } // if
+        }
+      }
 
       return false;
     }

@@ -84,7 +84,7 @@
      */
     function &getConnector() {
       if($this->connector === false) {
-        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://activecollab.back', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
+        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://feather.dev', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
       }
 
       return $this->connector;

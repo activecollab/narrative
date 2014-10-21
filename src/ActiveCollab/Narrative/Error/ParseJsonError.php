@@ -30,7 +30,8 @@
      * @param int $json_error
      * @param string|null $message
      */
-    function __construct($json, $json_error, $message = null) {
+    function __construct($json, $json_error, $message = null)
+    {
       $this->json = $json;
       $this->json_error = $json_error;
 
@@ -60,24 +61,26 @@
       }
 
       parent::__construct($message);
-    } // __construct
+    }
 
     /**
      * Return JSON source
      *
      * @return string
      */
-    function getJson() {
+    function getJson()
+    {
       return $this->json;
-    } // getJson
+    }
 
     /**
      * Return JSOn error code
      *
      * @return int
      */
-    function getJsonError() {
+    function getJsonError()
+    {
       return $this->json_error;
-    } // getJsonError
+    }
 
   }
