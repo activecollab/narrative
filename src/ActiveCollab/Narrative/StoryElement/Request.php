@@ -90,7 +90,7 @@
           }
         }
 
-        $this->validate($response, $passes, $failures);
+        $this->validate($response, $variables, $passes, $failures);
         $this->fetchVariables($response, $variables, $failures);
         $this->printRequestStatusLine($response, $passes, $failures, $request_time, $this->executeAs(), $output);
 
@@ -156,7 +156,7 @@
 
           $header_rendered = false;
 
-          foreach (Reader::createFromString($response->getBody())->fetchAll() as $row) {
+          foreach (Reader::createFromString(trim($response->getBody()))->fetchAll() as $row) {
             if ($header_rendered) {
               $table->addRow($row);
             } else {
@@ -182,14 +182,15 @@
      * Validate response
      *
      * @param Response|int $response
-     * @param array $passes
-     * @param array $failures
+     * @param array        $variables
+     * @param array        $passes
+     * @param array        $failures
      * @return boolean
      */
-    private function validate(&$response, array &$passes, array &$failures) {
+    private function validate(&$response, array &$variables, array &$passes, array &$failures) {
       if(isset($this->source['validate']) && is_array($this->source['validate'])) {
         foreach($this->source['validate'] as $validator => $validator_data) {
-          $this->callValidator($validator, $validator_data, $response, $passes, $failures);
+          $this->callValidator($validator, $validator_data, $response, $variables, $passes, $failures);
         }
       }
 
@@ -199,20 +200,21 @@
     /**
      * Return validator method name
      *
-     * @param string $validator
-     * @param mixed $validator_data
+     * @param string       $validator
+     * @param mixed        $validator_data
      * @param Response|int $response
-     * @param array $passes
-     * @param array $failures
+     * @param array        $variables
+     * @param array        $passes
+     * @param array        $failures
      * @throws \ActiveCollab\Narrative\Error\NoValidatorError
      */
-    private function callValidator($validator, $validator_data, &$response, array &$passes, array &$failures) {
+    private function callValidator($validator, $validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       $method_name = 'validate' . ucfirst(preg_replace_callback("/_[a-z]?/", function($matches) {
         return strtoupper(ltrim($matches[0], "_"));
       }, $validator));
 
       if(method_exists($this, $method_name)) {
-        $this->$method_name($validator_data, $response, $passes, $failures);
+        $this->$method_name($validator_data, $response, $variables, $passes, $failures);
       } else {
         throw new NoValidatorError($validator);
       }
@@ -223,10 +225,11 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      */
-    protected function validateHttpCode($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateHttpCode($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response) {
         $code = $response->getHttpCode();
       } elseif(is_int($response)) {
@@ -247,10 +250,11 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      */
-    protected function validateContentType($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateContentType($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response) {
         if($response->getContentType() == $validator_data) {
           $passes[] = "Got " . $response->getContentType();
@@ -267,10 +271,11 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      */
-    protected function validateContentLength($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateContentLength($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response) {
         if($response->getContentLength() == $validator_data) {
           $passes[] = "Content length is " . $response->getContentLength();
@@ -287,10 +292,11 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      */
-    protected function validateIsJson($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateIsJson($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response && $response->isJson()) {
         $passes[] = 'Response is JSON';
       } else {
@@ -303,10 +309,11 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      */
-    protected function validateJsonCountElements($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateJsonCountElements($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response && $response->isJson()) {
         $json = $response->getJson();
 
@@ -331,11 +338,12 @@
      *
      * @param mixed $validator_data
      * @param Response|int $response
+     * @param array $variables
      * @param array $passes
      * @param array $failures
      * @throws \ActiveCollab\Narrative\Error\ValidatorParamsError
      */
-    protected function validateJsonPath($validator_data, &$response, array &$passes, array &$failures) {
+    protected function validateJsonPath($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
       if($response instanceof Response && $response->isJson()) {
         if(is_array($validator_data)) {
           $json = $response->getJson(); // Fetch JSON only when we have an array of checkers
@@ -354,6 +362,14 @@
                   list($path, $compare_operation, $compare_data) = $params; break;
                 default:
                   throw new ValidatorParamsError('json_path', 'Individual JSONPath is an array with at least one (path) and at max three elements (path, compare operation and compare data)');
+              }
+
+              if ($compare_data && is_string($compare_data) && substr($compare_data, 0, 1) === '$') {
+                $var_name = substr($compare_data, 1);
+
+                if (array_key_exists($var_name, $variables)) {
+                  $compare_data = $variables[$var_name];
+                }
               }
 
               list($path, $fetch_first) = $this->processJsonPath($path);
