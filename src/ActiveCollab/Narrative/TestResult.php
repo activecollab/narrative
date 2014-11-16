@@ -18,7 +18,27 @@
     /**
      * @var int
      */
-    private $total_requests = 0, $failed_requests = 0, $total_assertions = 0, $total_passes = 0, $total_failures = 0, $total_sleep_time = 0;
+    private $total_stories = 0;
+
+    /**
+     * @var int
+     */
+    private $total_requests = 0, $failed_requests = 0;
+
+    /**
+     * @var int
+     */
+    private $total_assertions = 0, $total_passes = 0, $total_failures = 0;
+
+    /**
+     * @var int
+     */
+    private $total_request_time = 0, $total_sleep_time = 0;
+
+    /**
+     * @var float
+     */
+    private $construct_time;
 
     /**
      * @var OutputInterface
@@ -44,6 +64,7 @@
     public function __construct(OutputInterface &$output)
     {
       $this->output = $output;
+      $this->construct_time = microtime(true);
     }
 
     /**
@@ -70,11 +91,13 @@
      */
     public function storyTearDown()
     {
-      $this->current_story = null;
+      $this->total_stories++;
 
       if ($this->output_filter['set_up_tear_down']) {
         $this->output->writeln('Tearing down the test environment');
       }
+
+      $this->current_story = null;
     }
 
     /**
@@ -96,11 +119,10 @@
      * @param array $failures
      * @param float|null $request_time
      * @param string $persona
-     * @param float $request_time
      * @param boolean $is_prep
      * @param boolean $dump_response
      */
-    public function requestTearDown($response, $passes, $failures, $request_time, $persona, $request_time, $is_prep, $dump_response)
+    public function requestTearDown($response, $passes, $failures, $request_time, $persona, $is_prep, $dump_response)
     {
       $this->total_requests++;
 
@@ -114,8 +136,12 @@
         $this->total_failures += count($failures);
       }
 
+      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
+
+      $this->total_request_time += $request_time;
+
       if ($this->output_filter['request_details']) {
-        $this->writeRequestMessage($response, $failures, $request_time, $persona, $request_time, $is_prep, $dump_response);
+        $this->writeRequestMessage($response, $failures, $request_time, $persona, $is_prep, $dump_response);
       }
 
       $this->current_request = null;
@@ -126,11 +152,10 @@
      * @param array $failures
      * @param float|null $request_time
      * @param string $persona
-     * @param float $request_time
      * @param boolean $is_prep
      * @param boolean $dump_response
      */
-    private function writeRequestMessage($response, $failures, $request_time, $persona, $request_time, $is_prep, $dump_response)
+    private function writeRequestMessage($response, $failures, $request_time, $persona, $is_prep, $dump_response)
     {
       if(empty($failures)) {
         $color = 'info';
@@ -140,7 +165,6 @@
       }
 
       $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
-      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
       $prep = $is_prep ? ' <question>[PREP]</question>' : '';
       $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
 
@@ -180,7 +204,7 @@
 
           $table->render();
 
-          // Plain text
+        // Plain text
         } else {
           $this->output->writeln($response->getBody());
         }
@@ -256,6 +280,10 @@
      */
     public function conclude()
     {
+      $this->output->writeln('');
+
+      $this->output->writeln('Stories: ' . $this->total_stories . '.');
+
       if ($this->failed_requests) {
         $stats = "Requests: {$this->total_requests}. <error>Failures: {$this->failed_requests}</error>. ";
       } else {
@@ -269,5 +297,27 @@
       }
 
       $this->output->writeln($stats);
+
+      $time_stats = 'Execution Time: ' . $this->getExecutionTime() . 's. Request Time: ' . $this->getTotalRequestTime() . 's. Sleep Time: ' . $this->total_sleep_time . 's.';
+
+      $this->output->writeln($time_stats);
+
+      $this->output->writeln('');
+    }
+
+    /**
+     * @return float
+     */
+    private function getExecutionTime()
+    {
+      return round(microtime(true) - $this->construct_time, 2);
+    }
+
+    /**
+     * @return float
+     */
+    private function getTotalRequestTime()
+    {
+      return round($this->total_request_time, 2);
     }
   }

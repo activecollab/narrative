@@ -86,7 +86,7 @@
           $this->validate($response, $variables, $passes, $failures);
           $this->fetchVariables($response, $variables, $failures);
 
-          $test_result->requestTearDown($response, $passes, $failures, $request_time, $this->executeAs(), $request_time, $this->isPreparation(), $this->dumpResponse());
+          $test_result->requestTearDown($response, $passes, $failures, $request_time, $this->executeAs(), $this->isPreparation(), $this->dumpResponse());
 
           if(empty($failures) && $this->createPersona()) {
             $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
