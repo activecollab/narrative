@@ -3,9 +3,8 @@
   namespace ActiveCollab\Narrative;
 
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep;
-  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ParseJsonError;
+  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError;
   use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
-  use Symfony\Component\Console\Output\OutputInterface;
 
   /**
    * Narrative project
@@ -145,77 +144,42 @@
      * Test a group of stories
      *
      * @param Story[] $stories
-     * @param OutputInterface $output
+     * @param TestResult $test_result
      */
-    public function testStories(array $stories, OutputInterface &$output)
+    public function testStories(array $stories, TestResult &$test_result)
     {
-      $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
-
       foreach ($stories as $story) {
         try {
           if ($elements = $story->getElements()) {
-            $this->setUp($output, $story);
+            $this->setUp($story, $test_result);
 
             try {
-              $output->writeln('');
+//              $output->writeln('');
 
               $variables = [];
 
               foreach ($elements as $element) {
                 if ($element instanceof Request) {
-                  list($response, $passes, $failures) = $element->execute($this, $variables, $output);
-
-                  $total_requests++;
-
-                  if (empty($response) || is_array($failures) && count($failures)) {
-                    $failed_requests++;
-                  }
-
-                  if (is_array($passes)) {
-                    $total_assertions += count($passes);
-                    $total_passes += count($passes);
-                  }
-
-                  if (is_array($failures)) {
-                    $total_assertions += count($failures);
-                    $total_failures += count($failures);
-                  }
+                  $element->execute($this, $variables, $test_result);
                 } elseif ($element instanceof Sleep) {
-                  $element->execute($this, $output);
+                  $element->execute($this, $test_result);
                 }
               }
             } catch (Exception $e) {
-              $this->tearDown($output); // Make sure that we tear down the environment in case of an error
+              $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
               throw $e;
             }
 
-            $this->tearDown($output); // Make sure that we tear down the environment after each request
+            $this->tearDown($test_result); // Make sure that we tear down the environment after each request
           }
         } catch (ParseError $e) {
-          $output->writeln($e->getMessage());
+          $test_result->parseError($e);
         } catch (ParseJsonError $e) {
-          $output->writeln($e->getMessage());
-          $output->writeln($e->getJson());
+          $test_result->parseJsonError($e);
         } catch (\Exception $e) {
-          $output->writeln($e->getMessage());
+          $test_result->requestExecutionError($e);
         }
       }
-
-      $output->writeln('');
-
-      if ($failed_requests) {
-        $stats = "Requests: {$total_requests}. <error>Failures: {$failed_requests}</error>. ";
-      } else {
-        $stats = "Requests: {$total_requests}. Failures: {$failed_requests}. ";
-      }
-
-      if ($total_failures) {
-        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. <error>Failures: {$total_failures}</error>.";
-      } else {
-        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. Failures: {$total_failures}.";
-      }
-
-      $output->writeln($stats);
     }
 
     // ---------------------------------------------------
@@ -225,15 +189,11 @@
     /**
      * Set up the environment before each story
      *
-     * @param OutputInterface $output
-     * @param Story|null
+     * @param Story $story
+     * @param TestResult $test_result
      */
-    public function setUp(OutputInterface $output, $story = null) {
-      if($story instanceof Story) {
-        $output->writeln('Setting up the test environment for "' . $story->getName() . '" story');
-      } else {
-        $output->writeln('Setting up the test environment');
-      }
+    public function setUp(Story $story, TestResult &$test_result) {
+      $test_result->storySetUp($story);
 
       if(isset($this->configuration['set_up']) && is_array($this->configuration['set_up'])) {
         foreach($this->configuration['set_up'] as $command) {
@@ -245,10 +205,10 @@
     /**
      * Tear down before each story
      *
-     * @param OutputInterface $output
+     * @param TestResult $test_result
      */
-    public function tearDown(OutputInterface $output) {
-      $output->writeln('Tearing down the test environment');
+    public function tearDown(TestResult &$test_result) {
+      $test_result->storyTearDown();
 
       if(isset($this->configuration['tear_down']) && is_array($this->configuration['tear_down'])) {
         foreach($this->configuration['tear_down'] as $command) {

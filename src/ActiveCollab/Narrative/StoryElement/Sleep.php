@@ -4,6 +4,7 @@
 
   use ActiveCollab\Narrative\Project;
   use ActiveCollab\Narrative\Error\ParseJsonError;
+  use ActiveCollab\Narrative\TestResult;
   use Symfony\Component\Console\Output\OutputInterface;
 
   /**
@@ -24,14 +25,12 @@
      * Execute the command
      *
      * @param Project $project
-     * @param OutputInterface $output
+     * @param TestResult $test_result
      * @return array
      */
-    function execute(Project $project, $output) {
-      $how_long = $this->howLong();
-
-      $output->writeln("<info>Zzzzzzzzzz...</info> <question>[{$how_long}s]</question>");
-      sleep($how_long);
+    function execute(Project $project, TestResult &$test_result) {
+      $test_result->executionSleep($this->howLong());
+      sleep($this->howLong());
     }
 
     /**

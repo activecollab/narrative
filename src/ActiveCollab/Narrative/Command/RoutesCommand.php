@@ -17,7 +17,7 @@
      */
     protected function configure()
     {
-      $this->setName('routes')->setDescription('List all routes defined in this project');
+      $this->setName('routes')->setDescription('List routes in project');
     }
 
     /**

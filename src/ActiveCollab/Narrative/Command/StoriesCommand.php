@@ -17,7 +17,7 @@
      */
     protected function configure()
     {
-      $this->setName('stories')->setDescription('List all stories form this project');
+      $this->setName('stories')->setDescription('List stories in project');
     }
 
     /**

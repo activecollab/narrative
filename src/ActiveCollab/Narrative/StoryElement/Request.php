@@ -4,10 +4,9 @@
 
   use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Connector\Connector;
   use ActiveCollab\Narrative\Error\NoValidatorError, ActiveCollab\Narrative\Error\ValidatorParamsError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\RequestMethodError;
+  use ActiveCollab\Narrative\TestResult;
   use ActiveCollab\SDK\Response;
-  use Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table;
   use Peekmo\JsonPath\JsonStore;
-  use League\Csv\Reader;
 
   /**
    * HTTP request element
@@ -50,15 +49,16 @@
      *
      * @param Project $project
      * @param array $variables
-     * @param OutputInterface $output
-     * @return array
+     * @param TestResult $test_result
      */
-    function execute(Project $project, &$variables, $output) {
+    function execute(Project $project, &$variables, TestResult &$test_result) {
+      $test_result->requestSetUp($this);
+
       $connector = $project->getConnector();
 
-      $response = $request_time = null;
-
       try {
+        $request_time = null;
+
         switch($this->getMethod()) {
           case self::GET:
             $response = $connector->get($this->getPathWithQueryString(), $this->executeAs()); break;
@@ -71,106 +71,35 @@
           default:
             throw new RequestMethodError($this->getMethod());
         }
-      } catch(\Exception $e) {
-        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
 
-        if(method_exists($e, 'getServerResponse')) {
-          print_r($e->getServerResponse());
-        }
-      }
+        if($response) {
+          $passes = $failures = [];
 
-      if($response) {
-        $passes = $failures = [];
-
-        if($response instanceof Response && $response->getHttpCode() === 500) {
-          if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
-            // If dump_response is explicitly set to FALSE, don't turn it on
-          } else {
-            $this->source['dump_response'] = true;
-          }
-        }
-
-        $this->validate($response, $variables, $passes, $failures);
-        $this->fetchVariables($response, $variables, $failures);
-        $this->printRequestStatusLine($response, $passes, $failures, $request_time, $this->executeAs(), $output);
-
-        if(empty($failures) && $this->createPersona()) {
-          $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
-
-          if($token) {
-            $output->writeln("<comment>Info: Persona '" . $this->createPersona() . "' has been created (access token '{$token}')</comment>");
-          }
-        }
-
-        return [ $response, $passes, $failures ];
-      } else {
-        return [ null, null, null ];
-      }
-    }
-
-    /**
-     * Output status message
-     *
-     * @param Response|int $response
-     * @param array $passes
-     * @param array $failures
-     * @param float|null $request_time
-     * @param string $persona
-     * @param OutputInterface $output
-     */
-    private function printRequestStatusLine($response, $passes, $failures, $request_time, $persona, OutputInterface $output) {
-      if(empty($failures)) {
-        $color = 'info';
-      } else {
-        $color = 'error';
-        $output->writeln('');
-      }
-
-      $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
-      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
-      $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
-      $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
-
-      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPathWithQueryString() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
-
-      // Output failure lines
-      if(count($failures)) {
-        foreach($failures as $failure) {
-          $output->writeln('<error>- ' . $failure . '</error>');
-        }
-        $output->writeln('');
-      }
-
-      // Output response, if needed
-      if($this->dumpResponse() && $response instanceof Response) {
-
-        // JSON
-        if($response->isJson()) {
-          ob_start();
-          print_r($response->getJson());
-          $output->write(ob_get_clean());
-
-        // CSV
-        } elseif ($response->getContentType() == 'text/csv') {
-          $table = new Table($output);
-
-          $header_rendered = false;
-
-          foreach (Reader::createFromString(trim($response->getBody()))->fetchAll() as $row) {
-            if ($header_rendered) {
-              $table->addRow($row);
+          if($response instanceof Response && $response->getHttpCode() === 500) {
+            if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
+              // If dump_response is explicitly set to FALSE, don't turn it on
             } else {
-              $table->setHeaders($row);
-              $header_rendered = true;
+              $this->source['dump_response'] = true;
             }
           }
 
-          $table->render();
+          $this->validate($response, $variables, $passes, $failures);
+          $this->fetchVariables($response, $variables, $failures);
 
-        // Plain text
+          $test_result->requestTearDown($response, $passes, $failures, $request_time, $this->executeAs(), $request_time, $this->isPreparation(), $this->dumpResponse());
+
+          if(empty($failures) && $this->createPersona()) {
+            $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
+
+            if($token) {
+              $test_result->personaCreated($this->createPersona(), $token);
+            }
+          }
         } else {
-          $output->writeln($response->getBody());
+          $test_result->requestFailure();
         }
+      } catch(\Exception $e) {
+        $test_result->requestFailure($e);
       }
     }
 

@@ -7,6 +7,7 @@
   use ActiveCollab\Narrative\Project;
   use ActiveCollab\Narrative\Story;
   use ActiveCollab\Narrative\StoryElement\Request;
+  use ActiveCollab\Narrative\TestResult;
   use ActiveCollab\SDK\Exception;
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Command\Command;
@@ -25,7 +26,7 @@
      */
     protected function configure()
     {
-      $this->setName('test')->addArgument('story')->setDescription('Test all requests from all stories');
+      $this->setName('test')->addArgument('story')->setDescription('Test stories');
     }
 
     /**
@@ -56,7 +57,11 @@
         }
 
         if(count($stories)) {
-          $project->testStories($stories, $output);
+          $test_result = new TestResult($output);
+
+          $project->testStories($stories, $test_result);
+
+          $test_result->conclude();
         } else {
           $output->writeln('There are no stories in this project');
         }

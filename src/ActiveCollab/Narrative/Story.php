@@ -1,5 +1,4 @@
 <?php
-
   namespace ActiveCollab\Narrative;
 
   use ActiveCollab\Narrative\StoryElement\Sleep;
