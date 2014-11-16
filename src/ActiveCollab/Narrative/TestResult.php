@@ -21,6 +21,11 @@
     private $total_stories = 0;
 
     /**
+     * @var array
+     */
+    private $failed_stories = [];
+
+    /**
      * @var int
      */
     private $total_requests = 0, $failed_requests = 0;
@@ -278,6 +283,10 @@
       $this->total_requests++;
       $this->failed_requests++; // @TODO Record story and request details, not just the count?
 
+      if ($this->current_story instanceof Story && !in_array($this->current_story->getName(), $this->failed_stories)) {
+        $this->failed_stories[] = $this->current_story->getName();
+      }
+
       $this->current_request = null;
     }
 
@@ -350,7 +359,20 @@
     {
       $this->output->writeln('');
 
-      $this->output->writeln('Stories: ' . $this->total_stories . '.');
+      if (count($this->failed_stories)) {
+        $this->output->writeln('Stories: ' . $this->total_stories . '. <error>Failed Stories: ' . count($this->failed_stories) . '</error>.');
+
+        $this->output->writeln('');
+
+        $counter = 1;
+        foreach ($this->failed_stories as $failed_story) {
+          $this->output->writeln($counter++ . '. ' . $failed_story);
+        }
+
+        $this->output->writeln('');
+      } else {
+        $this->output->writeln('Stories: ' . $this->total_stories . '. Failed Stories: 0.');
+      }
 
       if ($this->failed_requests) {
         $stats = "Requests: {$this->total_requests}. <error>Failures: {$this->failed_requests}</error>. ";
