@@ -12,6 +12,7 @@
   use ActiveCollab\SDK\Response;
   use Symfony\Component\Console\Command\Command;
   use Symfony\Component\Console\Input\InputInterface;
+  use Symfony\Component\Console\Input\InputOption;
   use Symfony\Component\Console\Output\OutputInterface;
 
   /**
@@ -26,7 +27,11 @@
      */
     protected function configure()
     {
-      $this->setName('test')->addArgument('story')->addOption('coverage')->setDescription('Test stories');
+      $this
+        ->setName('test')
+        ->addArgument('story')
+        ->addOption('coverage', null, InputOption::VALUE_NONE, 'Track route coverage')
+        ->setDescription('Test stories');
     }
 
     /**

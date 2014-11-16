@@ -148,9 +148,15 @@
 
         if ($route_name) {
           if (empty($this->executed_routes[$route_name])) {
-            $this->executed_routes[$route_name] = 1;
+            $this->executed_routes[$route_name] = [ 'calls' => 1 ];
           } else {
-            $this->executed_routes[$route_name]++;
+            $this->executed_routes[$route_name]['calls']++;
+          }
+
+          if (empty($this->executed_routes[$route_name][$request->getMethod()])) {
+            $this->executed_routes[$route_name][$request->getMethod()] = 1;
+          } else {
+            $this->executed_routes[$route_name][$request->getMethod()]++;
           }
         }
       }
@@ -363,6 +369,35 @@
       $time_stats = 'Execution Time: ' . $this->getExecutionTime() . 's. Request Time: ' . $this->getTotalRequestTime() . 's. Sleep Time: ' . $this->total_sleep_time . 's.';
 
       $this->output->writeln($time_stats);
+
+      if ($this->track_coverage) {
+        $this->output->writeln('');
+        $this->output->writeln('Matched routes:');
+        $this->output->writeln('');
+
+        uasort($this->executed_routes, function($a, $b) {
+          if ($a['calls'] == $b['calls']) {
+            return 0;
+          }
+
+          return ($a['calls'] > $b['calls']) ? -1 : 1;
+        });
+
+        $table = new Table($this->output);
+        $table->setHeaders([ 'Route', 'Calls', 'GET', 'POST', 'PUT', 'DELETE' ]);
+
+        foreach ($this->executed_routes as $route_name => $route_data) {
+          $row = [ $route_name, $route_data['calls'] ];
+
+          foreach ([ 'GET', 'POST', 'PUT', 'DELETE' ] as $method) {
+            $row[] = isset($route_data[$method]) ? $route_data[$method] : 0;
+          }
+
+          $table->addRow($row);
+        }
+
+        $table->render();
+      }
 
       $this->output->writeln('');
     }

@@ -139,7 +139,17 @@
      */
     public function getRouteNameFromPath($path)
     {
+      if (isset($this->configuration['routes']) && is_array($this->configuration['routes'])) {
+        $path = trim($path, '/');
 
+        foreach (array_reverse($this->configuration['routes']) as $route_name => $route_settings) {
+          if (preg_match($route_settings['match'], $path)) {
+            return $route_name;
+          }
+        }
+      }
+
+      return '';
     }
 
     /**
