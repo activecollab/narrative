@@ -2,23 +2,18 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative\StoryElement\Request;
-  use ActiveCollab\Narrative\StoryElement\Sleep;
-  use ActiveCollab\SDK\Exception;
-  use ActiveCollab\Narrative\Error\CommandError;
-  use ActiveCollab\Narrative\Error\ParseError;
-  use ActiveCollab\Narrative\Error\ParseJsonError;
+  use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep;
+  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ParseJsonError;
+  use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
   use Symfony\Component\Console\Output\OutputInterface;
-  use ActiveCollab\Narrative\Connector\Connector;
-  use ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector;
 
   /**
    * Narrative project
    *
    * @package Narrative
    */
-  final class Project {
-
+  final class Project
+  {
     /**
      * @var string
      */
@@ -37,7 +32,7 @@
      * @param string $path
      * @throws |ActiveCollab\Narrative\Error\ParseJsonError
      */
-    function __construct($path) {
+    public function __construct($path) {
       $this->path = $path;
 
       if($this->isValid()) {
@@ -59,7 +54,7 @@
      *
      * @return string
      */
-    function getName() {
+    public function getName() {
       return isset($this->configuration['name']) && $this->configuration['name'] ? $this->configuration['name'] : basename($this->path);
     }
 
@@ -68,7 +63,7 @@
      *
      * @return string
      */
-    function getPath() {
+    public function getPath() {
       return $this->path;
     }
 
@@ -82,7 +77,7 @@
     /**
      * @return Connector
      */
-    function &getConnector() {
+    public function &getConnector() {
       if($this->connector === false) {
         $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://feather.dev', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
       }
@@ -95,7 +90,7 @@
      *
      * @return Story[]
      */
-    function getStories() {
+    public function getStories() {
       $result = [];
 
       if(is_dir("$this->path/stories")) {
@@ -106,8 +101,8 @@
            */
           if(substr($file->getBasename(), 0, 1) != '.' && $file->getExtension() == 'narr') {
             $result[] = new Story($file->getPathname());
-          } // if
-        } // foreach
+          }
+        }
       }
 
       return $result;
@@ -119,7 +114,7 @@
      * @param string $name
      * @return Story|null
      */
-    function getStory($name) {
+    public function getStory($name) {
       foreach($this->getStories() as $story) {
         if($story->getName() === $name) {
           return $story;
@@ -130,11 +125,19 @@
     }
 
     /**
+     * @return array
+     */
+    public function getRoutes()
+    {
+      return isset($this->configuration['routes']) && is_array($this->configuration['routes']) ? $this->configuration['routes'] : [];
+    }
+
+    /**
      * Return true if this is a valid project
      *
      * @return bool
      */
-    function isValid() {
+    public function isValid() {
       return is_dir($this->path) && is_file($this->path . '/project.json');
     }
 
@@ -144,12 +147,13 @@
      * @param Story[] $stories
      * @param OutputInterface $output
      */
-    function testStories(array $stories, OutputInterface &$output) {
+    public function testStories(array $stories, OutputInterface &$output)
+    {
       $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
 
-      foreach($stories as $story) {
+      foreach ($stories as $story) {
         try {
-          if($elements = $story->getElements()) {
+          if ($elements = $story->getElements()) {
             $this->setUp($output, $story);
 
             try {
@@ -157,62 +161,62 @@
 
               $variables = [];
 
-              foreach($elements as $element) {
-                if($element instanceof Request) {
+              foreach ($elements as $element) {
+                if ($element instanceof Request) {
                   list($response, $passes, $failures) = $element->execute($this, $variables, $output);
 
                   $total_requests++;
 
-                  if(empty($response) || is_array($failures) && count($failures)) {
-                    $failed_requests ++;
+                  if (empty($response) || is_array($failures) && count($failures)) {
+                    $failed_requests++;
                   }
 
-                  if(is_array($passes)) {
+                  if (is_array($passes)) {
                     $total_assertions += count($passes);
                     $total_passes += count($passes);
                   }
 
-                  if(is_array($failures)) {
+                  if (is_array($failures)) {
                     $total_assertions += count($failures);
                     $total_failures += count($failures);
                   }
-                } elseif($element instanceof Sleep) {
+                } elseif ($element instanceof Sleep) {
                   $element->execute($this, $output);
                 }
               }
-            } catch(Exception $e) {
+            } catch (Exception $e) {
               $this->tearDown($output); // Make sure that we tear down the environment in case of an error
               throw $e;
             }
 
             $this->tearDown($output); // Make sure that we tear down the environment after each request
           }
-        } catch(ParseError $e) {
+        } catch (ParseError $e) {
           $output->writeln($e->getMessage());
-        } catch(ParseJsonError $e) {
+        } catch (ParseJsonError $e) {
           $output->writeln($e->getMessage());
           $output->writeln($e->getJson());
-        } catch(\Exception $e) {
+        } catch (\Exception $e) {
           $output->writeln($e->getMessage());
         }
       }
 
       $output->writeln('');
 
-      if($failed_requests) {
+      if ($failed_requests) {
         $stats = "Requests: {$total_requests}. <error>Failures: {$failed_requests}</error>. ";
       } else {
         $stats = "Requests: {$total_requests}. Failures: {$failed_requests}. ";
       }
 
-      if($total_failures) {
+      if ($total_failures) {
         $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. <error>Failures: {$total_failures}</error>.";
       } else {
         $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. Failures: {$total_failures}.";
       }
 
       $output->writeln($stats);
-    } // testStories
+    }
 
     // ---------------------------------------------------
     //  Set up and tear down
@@ -224,7 +228,7 @@
      * @param OutputInterface $output
      * @param Story|null
      */
-    function setUp(OutputInterface $output, $story = null) {
+    public function setUp(OutputInterface $output, $story = null) {
       if($story instanceof Story) {
         $output->writeln('Setting up the test environment for "' . $story->getName() . '" story');
       } else {
@@ -243,7 +247,7 @@
      *
      * @param OutputInterface $output
      */
-    function tearDown(OutputInterface $output) {
+    public function tearDown(OutputInterface $output) {
       $output->writeln('Tearing down the test environment');
 
       if(isset($this->configuration['tear_down']) && is_array($this->configuration['tear_down'])) {
@@ -283,5 +287,4 @@
 
       return $result;
     }
-
   }

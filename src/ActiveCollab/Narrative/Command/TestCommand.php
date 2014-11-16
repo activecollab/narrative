@@ -25,7 +25,7 @@
      */
     protected function configure()
     {
-      $this->setName('test')->setDescription('Test all requests from all stories');
+      $this->setName('test')->addArgument('story')->setDescription('Test all requests from all stories');
     }
 
     /**
@@ -40,7 +40,20 @@
       $project = new Project(getcwd());
 
       if($project->isValid()) {
-        $stories = $project->getStories();
+        $story_name = $input->getArgument('story');
+
+        if (empty($story_name)) {
+          $stories = $project->getStories();
+        } else {
+          $story = $project->getStory($story_name);
+
+          if ($story instanceof Story) {
+            $stories = [ $story ];
+          } else {
+            $output->writeln("Story '{$story_name}' not found");
+            return;
+          }
+        }
 
         if(count($stories)) {
           $project->testStories($stories, $output);
@@ -50,7 +63,5 @@
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
-
     }
-
   }

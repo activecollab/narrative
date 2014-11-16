@@ -11,6 +11,6 @@
   $application->add(new Command\StoriesCommand());
   $application->add(new Command\StoryCommand());
   $application->add(new Command\TestCommand());
-  $application->add(new Command\TestStoryCommand());
   $application->add(new Command\TellStoryCommand());
+  $application->add(new Command\RoutesCommand());
   $application->run();
