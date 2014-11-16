@@ -19,14 +19,14 @@
    *
    * @package Narrative\Command
    */
-  class TestCommand extends Command {
-
+  class TestCommand extends Command
+  {
     /**
      * Configure command
      */
     protected function configure()
     {
-      $this->setName('test')->addArgument('story')->setDescription('Test stories');
+      $this->setName('test')->addArgument('story')->addOption('coverage')->setDescription('Test stories');
     }
 
     /**
@@ -57,7 +57,8 @@
         }
 
         if(count($stories)) {
-          $test_result = new TestResult($output);
+          $test_result = new TestResult($project, $output);
+          $test_result->setTrackCoverage($input->getOption('coverage'));
 
           $project->testStories($stories, $test_result);
 

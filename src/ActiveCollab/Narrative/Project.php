@@ -132,6 +132,17 @@
     }
 
     /**
+     * Return route names from path
+     *
+     * @param string $path
+     * @return string
+     */
+    public function getRouteNameFromPath($path)
+    {
+
+    }
+
+    /**
      * Return true if this is a valid project
      *
      * @return bool
@@ -154,8 +165,6 @@
             $this->setUp($story, $test_result);
 
             try {
-//              $output->writeln('');
-
               $variables = [];
 
               foreach ($elements as $element) {

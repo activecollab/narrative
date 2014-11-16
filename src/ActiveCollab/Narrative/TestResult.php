@@ -41,6 +41,11 @@
     private $construct_time;
 
     /**
+     * @var Project
+     */
+    private $project;
+
+    /**
      * @var OutputInterface
      */
     private $output;
@@ -57,15 +62,34 @@
     ];
 
     /**
+     * @var bool
+     */
+    private $track_coverage = false;
+
+    /**
      * Construct new test result instance
      *
+     * @param Project $project
      * @param OutputInterface $output
      */
-    public function __construct(OutputInterface &$output)
+    public function __construct(Project &$project, OutputInterface &$output)
     {
+      $this->project = $project;
       $this->output = $output;
       $this->construct_time = microtime(true);
     }
+
+    /**
+     * @param boolean $track
+     */
+    public function setTrackCoverage($track)
+    {
+      $this->track_coverage = (boolean) $track;
+    }
+
+    // ---------------------------------------------------
+    //  Event recording
+    // ---------------------------------------------------
 
     /**
      * @var Story|null
@@ -106,11 +130,30 @@
     private $current_request;
 
     /**
+     * List of routes with number of times they were called
+     *
+     * @var array
+     */
+    private $executed_routes = [];
+
+    /**
      * @param Request $request
      */
     public function requestSetUp(Request $request)
     {
       $this->current_request = $request;
+
+      if ($this->track_coverage) {
+        $route_name = $this->project->getRouteNameFromPath($request->getPath());
+
+        if ($route_name) {
+          if (empty($this->executed_routes[$route_name])) {
+            $this->executed_routes[$route_name] = 1;
+          } else {
+            $this->executed_routes[$route_name]++;
+          }
+        }
+      }
     }
 
     /**
@@ -259,21 +302,40 @@
       $this->total_sleep_time += $how_long;
     }
 
+    /**
+     * Record parse error
+     *
+     * @param ParseError $e
+     */
     public function parseError(ParseError $e)
     {
       $this->output->writeln($e->getMessage());
     }
 
+    /**
+     * Record parse JSON error
+     *
+     * @param ParseJsonError $e
+     */
     public function parseJsonError(ParseJsonError $e)
     {
       $this->output->writeln($e->getMessage());
       $this->output->writeln($e->getJson());
     }
 
+    /**
+     * Record request execution error
+     *
+     * @param Exception $e
+     */
     public function requestExecutionError(Exception $e)
     {
       $this->output->writeln($e->getMessage());
     }
+
+    // ---------------------------------------------------
+    //  Conclusion
+    // ---------------------------------------------------
 
     /**
      * Print test conclusion
