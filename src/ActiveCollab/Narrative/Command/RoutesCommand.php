@@ -10,8 +10,8 @@
    *
    * @package Narrative\Command
    */
-  class RoutesCommand extends Command {
-
+  class RoutesCommand extends Command
+  {
     /**
      * Configure command
      */
@@ -51,7 +51,5 @@
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
-
     }
-
   }

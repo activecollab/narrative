@@ -180,14 +180,18 @@
     {
       $this->total_requests++;
 
-      if (is_array($passes)) {
+      if (is_array($passes) && count($passes)) {
         $this->total_assertions += count($passes);
         $this->total_passes += count($passes);
       }
 
-      if (is_array($failures)) {
+      if (is_array($failures) && count($failures)) {
         $this->total_assertions += count($failures);
         $this->total_failures += count($failures);
+
+        if ($this->current_story instanceof Story && !in_array($this->current_story->getName(), $this->failed_stories)) {
+          $this->failed_stories[] = $this->current_story->getName();
+        }
       }
 
       $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;

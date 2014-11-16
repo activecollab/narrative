@@ -17,8 +17,8 @@
    *
    * @package Narrative\Command
    */
-  class StoryCommand extends Command {
-
+  class StoryCommand extends Command
+  {
     /**
      * Configure command
      */
@@ -71,21 +71,11 @@
           } catch(\Exception $e) {
             $output->writeln($e->getMessage());
           }
-
-
-
-//          if($elements) {
-//            foreach($elements as $element) {
-//
-//            }
-//          }
         } else {
           $output->writeln("Story '{$story_name}' not found");
         }
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
-
     }
-
   }

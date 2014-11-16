@@ -6,11 +6,11 @@
   use ActiveCollab\Narrative\Command;
   use Symfony\Component\Console\Application;
 
-  $application = new Application('Narrative', '0.1-dev');
+  $application = new Application('Narrative', '0.9.0');
+  $application->add(new Command\BuildCommand());
   $application->add(new Command\InitCommand());
+  $application->add(new Command\RoutesCommand());
   $application->add(new Command\StoriesCommand());
   $application->add(new Command\StoryCommand());
   $application->add(new Command\TestCommand());
-  $application->add(new Command\TellStoryCommand());
-  $application->add(new Command\RoutesCommand());
   $application->run();
