@@ -2,7 +2,7 @@
   namespace ActiveCollab;
 
   use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\TempNotFoundError, Michelf\MarkdownExtra, URLify, Hyperlight\Hyperlight, ActiveCollab\Narrative\SmartyHelpers, Smarty, ReflectionClass, ReflectionMethod;
-  use ActiveCollab\Narrative\Theme;
+  use ActiveCollab\Narrative\Theme, RecursiveDirectoryIterator, RecursiveIteratorIterator;
 
   /**
    * Main class for interaction with Narrative projects
@@ -194,5 +194,100 @@
       }
 
       return $result;
+    }
+
+    /**
+     * @param string $source_path
+     * @param string $target_path
+     * @param callable|null $on_create_dir
+     * @param callable|null $on_copy_file
+     */
+    public static function copyDir($source_path, $target_path, $on_create_dir = null, $on_copy_file = null)
+    {
+      if (!is_dir($target_path)) {
+        mkdir($target_path, 0755);
+      }
+
+      /**
+       * @var RecursiveDirectoryIterator[] $iterator
+       */
+      foreach ($iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source_path, RecursiveDirectoryIterator::SKIP_DOTS), RecursiveIteratorIterator::SELF_FIRST) as $item) {
+
+        if ($item->isDir()) {
+          mkdir($target_path . DIRECTORY_SEPARATOR . $iterator->getSubPathname());
+
+          if ($on_create_dir) {
+            call_user_func($on_create_dir, $target_path . DIRECTORY_SEPARATOR . $iterator->getSubPathname());
+          }
+        } else {
+          copy($item, $target_path . DIRECTORY_SEPARATOR . $iterator->getSubPathname());
+
+          if ($on_copy_file) {
+            call_user_func($on_copy_file, $item->getPath(), $target_path . DIRECTORY_SEPARATOR . $iterator->getSubPathname());
+          }
+        }
+      }
+    }
+
+    /**
+     * Create a new directory at $path
+     *
+     * @param string $path
+     * @param callable|null $on_item_created
+     */
+    public static function createDir($path, $on_item_created)
+    {
+      if (mkdir($path)) {
+        if ($on_item_created) {
+          call_user_func($on_item_created, $path);
+        }
+      }
+    }
+
+    /**
+     * Clear all files and subfolders from $path
+     *
+     * @param string $path
+     * @param callable|null $on_item_deleted
+     * @param bool $is_subpath
+     */
+    public static function clearDir($path, $on_item_deleted = null, $is_subpath = false)
+    {
+      if (is_link($path)) {
+        // Don't follow links
+      } elseif (is_file($path)){
+        if (unlink($path)) {
+          if ($on_item_deleted) {
+            call_user_func($on_item_deleted, $path);
+          }
+        }
+      }  elseif (is_dir($path)) {
+        foreach(glob(rtrim($path, '/') . '/*') as $index => $subdir_path) {
+          Narrative::clearDir($subdir_path, $on_item_deleted, true);
+        }
+
+        if ($is_subpath && rmdir($path)) {
+          if ($on_item_deleted) {
+            call_user_func($on_item_deleted, $path);
+          }
+        }
+      }
+    }
+
+    /**
+     * Write a new file with given content
+     *
+     * @param string $path
+     * @param string $content
+     * @param callable|null $on_file_created
+     * @return int
+     */
+    public static function writeFile($path, $content, $on_file_created = null)
+    {
+      $overwrite = file_exists($path);
+
+      if (file_put_contents($path, $content) && $on_file_created) {
+        call_user_func($on_file_created, $path, $overwrite);
+      }
     }
   }

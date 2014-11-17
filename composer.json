@@ -12,6 +12,7 @@
     "smarty/smarty": "~3.1",
     "jbroadway/urlify": "1.0.*@dev",
     "phine/phar": "~1.0",
+    "phpunit/phpunit": "~4.1",
     "activecollab/activecollab-sdk": "dev-develop#6eaf83c59d01a02cccf462cb2236666b49c8535c"
   },
   "minimum-stability": "dev",

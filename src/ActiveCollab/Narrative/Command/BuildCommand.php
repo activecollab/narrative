@@ -2,8 +2,10 @@
 
   namespace ActiveCollab\Narrative\Command;
 
+  use ActiveCollab\Narrative;
   use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError;
   use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface;
+  use Smarty;
 
   /**
    * Build documentation command
@@ -19,6 +21,11 @@
     {
       $this->setName('build')->setDescription('Build documentation');
     }
+
+    /**
+     * @var Smarty
+     */
+    private $smarty;
 
     /**
      * Execute command
@@ -47,10 +54,35 @@
           return;
         }
 
+        $this->smarty =& Narrative::initSmarty($project, $theme);
+
+        $this->prepareTargetPath($input, $output, $project, $target_path, $theme);
+
         $project->getStories();
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
+    }
+
+    /**
+     * @param InputInterface $input
+     * @param OutputInterface $output
+     * @param Project $project
+     * @param $target_path
+     * @param Theme $theme
+     * @return bool
+     */
+    public function prepareTargetPath(InputInterface $input, OutputInterface $output, Project $project, $target_path, Theme $theme)
+    {
+      Narrative::clearDir($target_path, function($path) use (&$output) {
+        $output->writeln("$path deleted");
+      });
+
+      Narrative::copyDir($theme->getPath() . '/assets', "$target_path/assets", function($path) use (&$output) {
+        $output->writeln("$path copied");
+      });
+
+      return true;
     }
 
     /**
@@ -69,6 +101,17 @@
       }
 
       return (string) $target;
+    }
+
+    /**
+     * Return true if target path is valid
+     *
+     * @param string $target_path
+     * @return bool
+     */
+    private function isValidTargetPath($target_path)
+    {
+      return $target_path && is_dir($target_path);
     }
 
     /**
