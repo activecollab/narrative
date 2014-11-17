@@ -266,4 +266,14 @@
 
       return $result;
     }
+
+    /**
+     * Return temp path
+     *
+     * @return string
+     */
+    public function getTempPath()
+    {
+      return $this->path . '/temp';
+    }
   }

@@ -6,7 +6,7 @@
   use ActiveCollab\Narrative\Command;
   use Symfony\Component\Console\Application;
 
-  $application = new Application('Narrative', '0.9.0');
+  $application = new Application('Narrative', \ActiveCollab\Narrative::VERSION);
   $application->add(new Command\BuildCommand());
   $application->add(new Command\InitCommand());
   $application->add(new Command\RoutesCommand());
