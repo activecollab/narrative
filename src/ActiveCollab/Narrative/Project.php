@@ -3,7 +3,7 @@
   namespace ActiveCollab\Narrative;
 
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep;
-  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError;
+  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
   use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
 
   /**
@@ -55,6 +55,18 @@
      */
     public function getName() {
       return isset($this->configuration['name']) && $this->configuration['name'] ? $this->configuration['name'] : basename($this->path);
+    }
+
+    /**
+     * Return configuration option
+     *
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getConfigurationOption($name, $default = null)
+    {
+      return isset($this->configuration[$name]) && $this->configuration[$name] ? $this->configuration[$name] : $default;
     }
 
     /**
@@ -275,5 +287,62 @@
     public function getTempPath()
     {
       return $this->path . '/temp';
+    }
+
+    /**
+     * @var string
+     */
+    private $default_build_target;
+
+    /**
+     * Return default build target
+     *
+     * @return string|null
+     */
+    function getDefaultBuildTarget()
+    {
+      if (empty($this->default_build_target)) {
+        $this->default_build_target = $this->getConfigurationOption('default_build_target');
+
+        if (empty($this->default_build_target)) {
+          $this->default_build_target = $this->path . '/build';
+        }
+      }
+
+      return $this->default_build_target;
+    }
+
+    /**
+     * Return build theme
+     *
+     * @param string|null $name
+     * @return Theme
+     * @throws ThemeNotFoundError
+     */
+    function getBuildTheme($name = null)
+    {
+      if ($name) {
+        $theme_path = __DIR__ . "/Themes/$name"; // Input
+      } elseif (is_dir($this->getPath() . '/theme')) {
+        $theme_path = $this->getPath() . '/theme'; // Project specific theme
+      } else {
+        $theme_path = __DIR__ . "/Themes/" . $this->getDefaultBuildTheme(); // Default built in theme
+      }
+
+      if ($theme_path && is_dir($theme_path)) {
+        return new Theme($theme_path);
+      } else {
+        throw new ThemeNotFoundError($name, $theme_path);
+      }
+    }
+
+    /**
+     * Return name of the default build theme
+     *
+     * @return string
+     */
+    function getDefaultBuildTheme()
+    {
+      return $this->getConfigurationOption('default_build_theme', 'bootstrap');
     }
   }
