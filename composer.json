@@ -5,11 +5,11 @@
   "require" : {
     "symfony/console" : "~2.3",
     "herrera-io/phar-update" : "~1.0",
-    "peekmo/jsonpath": "dev-master",
-    "michelf/php-markdown": "1.4.*@dev",
-    "twig/twig": "1.16.*@dev",
-    "razielanarki/hyperlight": "dev-master",
-    "league/csv": "6.0.*@dev",
+    "peekmo/jsonpath": "~1.1",
+    "michelf/php-markdown": ">1.4",
+    "razielanarki/hyperlight": "~0.1",
+    "league/csv": "~6.0",
+    "smarty/smarty": "~3.1",
     "activecollab/activecollab-sdk": "dev-develop#6eaf83c59d01a02cccf462cb2236666b49c8535c"
   },
   "minimum-stability": "dev",
