@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\Narrative;
 
+  use ActiveCollab\Narrative\Error\Error;
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep;
   use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
   use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
@@ -97,26 +98,68 @@
     }
 
     /**
+     * @var array
+     */
+    private $stories = false;
+
+    /**
      * Return all project stories
      *
      * @return Story[]
      */
     public function getStories() {
-      $result = [];
+      if ($this->stories === false) {
+        $this->stories = [];
 
-      if(is_dir("$this->path/stories")) {
-        foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator("$this->path/stories")) as $file) {
+        $story_discoverer = $this->getStoryDiscoverer();
 
-          /**
-           * @var \DirectoryIterator $file
-           */
-          if(substr($file->getBasename(), 0, 1) != '.' && $file->getExtension() == 'narr') {
-            $result[] = new Story($file->getPathname());
+        $story_files = $story_discoverer->getStoryFiles("$this->path/stories");
+
+        if (is_array($story_files)) {
+          sort($story_files);
+
+          foreach ($story_files as $story_file) {
+            $this->stories[] = new Story($story_file, "$this->path/stories");
           }
         }
       }
 
-      return $result;
+      return $this->stories;
+    }
+
+    /**
+     * @var StoryDiscoverer
+     */
+    private $story_discoverer;
+
+    /**
+     * Return story discoverer instance
+     *
+     * @return StoryDiscoverer
+     */
+    public function getStoryDiscoverer()
+    {
+      if (empty($this->story_discoverer)) {
+        $this->story_discoverer = new StoryDiscoverer();
+      }
+
+      return $this->story_discoverer;
+    }
+
+    /**
+     * Set custom story discoverer
+     *
+     * @param StoryDiscoverer $discoverer
+     * @throws Error
+     */
+    public function setStoryDiscoverer($discoverer)
+    {
+      if ($discoverer instanceof StoryDiscoverer || $discoverer === null) {
+        $this->story_discoverer = $discoverer;
+        $this->stories = false; // Reset stories cache
+      } else {
+        throw new Error('Valid StoryDiscoverer instance or NULL expected');
+      }
     }
 
     /**
