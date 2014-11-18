@@ -319,4 +319,15 @@
     {
       return Narrative::VERSION;
     }
+
+    /**
+     * Get raw JSON string and return it pretty printed
+     *
+     * @param string $json
+     * @return string
+     */
+    public static function modifier_pretty_printed_json($json)
+    {
+      return json_encode(json_decode($json, true), JSON_PRETTY_PRINT);
+    }
   }

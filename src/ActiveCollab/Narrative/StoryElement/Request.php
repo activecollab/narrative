@@ -50,6 +50,7 @@
      * @param Project $project
      * @param array $variables
      * @param TestResult $test_result
+     * @return array
      */
     function execute(Project $project, &$variables, TestResult &$test_result) {
       $test_result->requestSetUp($this);
@@ -95,12 +96,16 @@
               $test_result->personaCreated($this->createPersona(), $token);
             }
           }
+
+          return $response instanceof Response ? [ $response->getHttpCode(), $response->getContentType(), $response->getBody() ] : [ 200, 'text/html', '' ];
         } else {
           $test_result->requestFailure();
         }
       } catch(\Exception $e) {
         $test_result->requestFailure($e);
       }
+
+      return [ 500, 'text/html', '' ];
     }
 
     // ---------------------------------------------------

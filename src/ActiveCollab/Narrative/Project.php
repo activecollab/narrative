@@ -2,10 +2,10 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative\Error\Error;
-  use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep;
-  use ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
+  use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
+  use ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
   use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
+  use Smarty;
 
   /**
    * Narrative project
@@ -273,6 +273,69 @@
       } catch (\Exception $e) {
         $test_result->requestExecutionError($e);
       }
+    }
+
+    /**
+     * Test a group of stories
+     *
+     * @param Story $story
+     * @param TestResult $test_result
+     * @param Smarty $smarty
+     * @return string
+     */
+    public function testAndRenderStory(Story $story, TestResult &$test_result, Smarty &$smarty)
+    {
+      $result = '';
+
+      try {
+        if ($elements = $story->getElements()) {
+          $this->setUp($story, $test_result);
+
+          try {
+            $variables = [];
+
+            $request_template = $smarty->createTemplate('request.tpl');
+            $request_id = 1;
+
+            foreach ($elements as $element) {
+              if ($element instanceof Request) {
+                list($http_code, $content_type, $response) = $element->execute($this, $variables, $test_result);
+
+                $request_template->assign([
+                  'request' => $element,
+                  'request_id' => $request_id++,
+                  'http_code' => $http_code,
+                  'content_type' => $content_type,
+                  'response' => $response,
+                ]);
+
+                $request_template->assignByRef('request_variables', $variables);
+
+                $result .= $request_template->fetch();
+              } elseif ($element instanceof Sleep) {
+                $element->execute($this, $test_result);
+
+                $result .= '<div class="sleep">Sleeping for ' . $element->howLong() . ' seconds</div>';
+              } elseif ($element instanceof Text) {
+                $result .= nl2br($element->getSource());
+              }
+            }
+          } catch (Exception $e) {
+            $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
+            throw $e;
+          }
+
+          $this->tearDown($test_result); // Make sure that we tear down the environment after each request
+        }
+      } catch (ParseError $e) {
+        $test_result->parseError($e);
+      } catch (ParseJsonError $e) {
+        $test_result->parseJsonError($e);
+      } catch (\Exception $e) {
+        $test_result->requestExecutionError($e);
+      }
+
+      return $result;
     }
 
     // ---------------------------------------------------

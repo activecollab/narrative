@@ -2,8 +2,7 @@
 
   namespace ActiveCollab\Narrative\Command;
 
-  use ActiveCollab\Narrative;
-  use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError;
+  use ActiveCollab\Narrative, ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError, ActiveCollab\Narrative\TestResult;
   use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Input\InputOption;
   use Smarty;
 
@@ -61,8 +60,14 @@
 
         $this->prepareTargetPath($target_path, $theme, $output);
 
-        foreach ($project->getStories() as $story) {
-          $this->buildStory($target_path, $story, $output);
+        $stories = $project->getStories();
+
+        if (count($stories)) {
+          $test_result = new TestResult($project, $output);
+
+          foreach ($project->getStories() as $story) {
+            $this->buildStory($target_path, $story, $project, $test_result, $output);
+          }
         }
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
@@ -95,9 +100,11 @@
      *
      * @param string $target_path
      * @param Story $story
+     * @param Project $project
+     * @param TestResult $test_result
      * @param OutputInterface $output
      */
-    private function buildStory($target_path, Story $story, OutputInterface $output)
+    private function buildStory($target_path, Story $story, Project $project, TestResult &$test_result, OutputInterface $output)
     {
       $story_target_path = $target_path . '/';
 
@@ -113,7 +120,10 @@
 
       $story_target_path .= Narrative::slug($story->getName()) . '.html';
 
-      $this->smarty->assign('current_story', $story);
+      $this->smarty->assign([
+        'current_story' => $story,
+        'current_story_body' => $project->testAndRenderStory($story, $test_result, $this->smarty),
+      ]);
 
       Narrative::writeFile($story_target_path, $this->smarty->fetch('story.tpl'), function($path) use (&$output) {
         $output->writeln("File '$path' created");

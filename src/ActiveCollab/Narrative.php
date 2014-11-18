@@ -53,6 +53,8 @@
             self::$smarty->registerPlugin('block', substr($method_name, 6), ['\ActiveCollab\Narrative\SmartyHelpers', $method_name]);
           } elseif (substr($method_name, 0, 9) === 'function_') {
             self::$smarty->registerPlugin('function', substr($method_name, 9), ['\ActiveCollab\Narrative\SmartyHelpers', $method_name]);
+          } elseif (substr($method_name, 0, 9) === 'modifier_') {
+            self::$smarty->registerPlugin('modifier', substr($method_name, 9), ['\ActiveCollab\Narrative\SmartyHelpers', $method_name]);
           };
         }
 

@@ -1,5 +1,4 @@
 <?php
-
   namespace ActiveCollab\Narrative\StoryElement;
 
   use ActiveCollab\Narrative\Project;
@@ -59,8 +58,7 @@
      *
      * @return int
      */
-    private function howLong() {
+    public function howLong() {
       return isset($this->source['seconds']) && $this->source['seconds'] > 0 ? (integer) $this->source['seconds'] : 1;
     }
-
   }
