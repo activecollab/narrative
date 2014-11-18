@@ -116,7 +116,7 @@
         $story_files = $story_discoverer->getStoryFiles("$this->path/stories");
 
         if (is_array($story_files)) {
-          sort($story_files);
+          $this->sortStoryFiles($story_files);
 
           foreach ($story_files as $story_file) {
             $this->stories[] = new Story($story_file, "$this->path/stories");
@@ -160,6 +160,27 @@
       } else {
         throw new Error('Valid StoryDiscoverer instance or NULL expected');
       }
+    }
+
+    /**
+     * Sort story files so root stories are above stories organised in groups
+     *
+     * @param array $story_files
+     */
+    private function sortStoryFiles(array &$story_files)
+    {
+      sort($story_files);
+
+      $root_stories = [];
+
+      foreach ($story_files as $k => $story_file) {
+        if (dirname($story_file) === "$this->path/stories") {
+          $root_stories[] = $story_file;
+          unset($story_files[$k]);
+        }
+      }
+
+      $story_files = array_merge($root_stories, $story_files);
     }
 
     /**
