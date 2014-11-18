@@ -5,7 +5,7 @@
   /**
    * Exception that is thrown when required param is not provided in a template function call
    *
-   * @package ActiveCollab\Shade\Error
+   * @package ActiveCollab\Narrative\Error
    */
   class ParamRequiredError extends Error
   {

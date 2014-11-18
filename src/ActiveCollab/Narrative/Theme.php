@@ -4,7 +4,7 @@
   use Exception;
 
   /**
-   * Shade theme class
+   * Narrative theme
    *
    * @package ActiveCollab\Narrative
    */
@@ -24,7 +24,7 @@
       if (is_dir($path)) {
         $this->path = $path;
       } else {
-        throw new Exception("Path '$path' is not a valid Shade theme");
+        throw new Exception("Path '$path' is not a valid Narrative theme");
       }
     }
 

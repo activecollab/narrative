@@ -7,10 +7,55 @@
   /**
    * Help element text helpers
    *
-   * @package Shade
+   * @package ActiveCollab\Narrative
    */
   class SmartyHelpers
   {
+    /**
+     * @param array $params
+     * @return string
+     */
+    public static function function_stylesheet_url($params)
+    {
+      $page_level = isset($params['page_level']) ? (integer) $params['page_level'] : 0;
+      $locale = isset($params['locale']) && $params['locale'] ? $params['locale'] : null;
+
+      return '<link rel="stylesheet" type="text/css" href="' . self::pageLevelToPrefix($page_level, $locale) . "assets/stylesheets/main.css?timestamp=" . time() . '">';
+    }
+
+    /**
+     * Render navigation link
+     *
+     * @param array $params
+     * @return string
+     */
+    public static function function_navigation_link($params)
+    {
+      $page_level = isset($params['page_level']) && (integer) $params['page_level'] > 0 ? (integer) $params['page_level'] : 0;
+
+      return self::pageLevelToPrefix($page_level) . 'index.html';
+    }
+
+    /**
+     * Return theme param URl
+     *
+     * @param array $params
+     * @return string
+     * @throws ParamRequiredError
+     */
+    public static function function_theme_asset($params)
+    {
+      $name = isset($params['name']) && $params['name'] ? ltrim($params['name'], '/') : null;
+      $page_level = isset($params['page_level']) ? (integer) $params['page_level'] : 0;
+      $current_locale = isset($params['current_locale']) ? $params['current_locale'] : self::$default_locale;
+
+      if (empty($name)) {
+        throw new ParamRequiredError('name parameter is required');
+      }
+
+      return self::pageLevelToPrefix($page_level, $current_locale) . "assets/$name";
+    }
+
     /**
      * Image function
      *

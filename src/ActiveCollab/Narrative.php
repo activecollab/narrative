@@ -56,7 +56,11 @@
           };
         }
 
-        self::$smarty->assign([ 'project' => $project ]);
+        self::$smarty->assign([
+          'project' => $project,
+          'copyright' => $project->getConfigurationOption('copyright', '--UNKNOWN--'),
+          'copyright_since' => $project->getConfigurationOption('copyright_since'),
+        ]);
       }
 
       return self::$smarty;

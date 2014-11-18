@@ -36,7 +36,11 @@
       if($project->isValid()) {
         $output->writeln('Project already initialized');
       } else {
-
+        // Write project.json
+        // Create /build folder
+        // Create /files folder
+        // Create /stories folder
+        // Create /temp folder
       }
     }
   }

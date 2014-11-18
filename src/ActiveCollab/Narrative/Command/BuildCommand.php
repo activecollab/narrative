@@ -3,8 +3,8 @@
   namespace ActiveCollab\Narrative\Command;
 
   use ActiveCollab\Narrative;
-  use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError;
-  use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface;
+  use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError;
+  use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Input\InputOption;
   use Smarty;
 
   /**
@@ -19,7 +19,10 @@
      */
     protected function configure()
     {
-      $this->setName('build')->setDescription('Build documentation');
+      $this->setName('build')
+        ->addOption('target', null, InputOption::VALUE_REQUIRED, 'Where do you want Narrative to build the docs?')
+        ->addOption('theme', null, InputOption::VALUE_REQUIRED, 'Name of the theme that should be used to build the docs')
+        ->setDescription('Build documentation');
     }
 
     /**
@@ -56,23 +59,25 @@
 
         $this->smarty =& Narrative::initSmarty($project, $theme);
 
-        $this->prepareTargetPath($input, $output, $project, $target_path, $theme);
+        $this->prepareTargetPath($target_path, $theme, $output);
 
-        $project->getStories();
+        foreach ($project->getStories() as $story) {
+          $this->buildStory($target_path, $story, $output);
+        }
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
     }
 
     /**
-     * @param InputInterface $input
-     * @param OutputInterface $output
-     * @param Project $project
-     * @param $target_path
+     * Prepare target path
+     *
+     * @param string $target_path
      * @param Theme $theme
+     * @param OutputInterface $output
      * @return bool
      */
-    public function prepareTargetPath(InputInterface $input, OutputInterface $output, Project $project, $target_path, Theme $theme)
+    public function prepareTargetPath($target_path, Theme $theme, OutputInterface $output)
     {
       Narrative::clearDir($target_path, function($path) use (&$output) {
         $output->writeln("$path deleted");
@@ -83,6 +88,36 @@
       });
 
       return true;
+    }
+
+    /**
+     * Build single story
+     *
+     * @param string $target_path
+     * @param Story $story
+     * @param OutputInterface $output
+     */
+    private function buildStory($target_path, Story $story, OutputInterface $output)
+    {
+      $story_target_path = $target_path . '/';
+
+      foreach ($story->getGroups() as $group) {
+        $story_target_path .= Narrative::slug($group) . '/';
+
+        if (!is_dir($story_target_path)) {
+          Narrative::createDir($story_target_path, function($path) use ($output) {
+            $output->writeln("Directory '$path' created");
+          });
+        }
+      }
+
+      $story_target_path .= Narrative::slug($story->getName()) . '.html';
+
+      $this->smarty->assign('current_story', $story);
+
+      Narrative::writeFile($story_target_path, $this->smarty->fetch('story.tpl'), function($path) use (&$output) {
+        $output->writeln("File '$path' created");
+      });
     }
 
     /**

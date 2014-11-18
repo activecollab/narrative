@@ -65,7 +65,9 @@
           $test_result = new TestResult($project, $output);
           $test_result->setTrackCoverage($input->getOption('coverage'));
 
-          $project->testStories($stories, $test_result);
+          foreach ($stories as $story) {
+            $project->testStory($story, $test_result);
+          }
 
           $test_result->conclude();
         } else {

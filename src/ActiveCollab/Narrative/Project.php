@@ -240,40 +240,38 @@
     /**
      * Test a group of stories
      *
-     * @param Story[] $stories
+     * @param Story $story
      * @param TestResult $test_result
      */
-    public function testStories(array $stories, TestResult &$test_result)
+    public function testStory(Story $story, TestResult &$test_result)
     {
-      foreach ($stories as $story) {
-        try {
-          if ($elements = $story->getElements()) {
-            $this->setUp($story, $test_result);
+      try {
+        if ($elements = $story->getElements()) {
+          $this->setUp($story, $test_result);
 
-            try {
-              $variables = [];
+          try {
+            $variables = [];
 
-              foreach ($elements as $element) {
-                if ($element instanceof Request) {
-                  $element->execute($this, $variables, $test_result);
-                } elseif ($element instanceof Sleep) {
-                  $element->execute($this, $test_result);
-                }
+            foreach ($elements as $element) {
+              if ($element instanceof Request) {
+                $element->execute($this, $variables, $test_result);
+              } elseif ($element instanceof Sleep) {
+                $element->execute($this, $test_result);
               }
-            } catch (Exception $e) {
-              $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
-              throw $e;
             }
-
-            $this->tearDown($test_result); // Make sure that we tear down the environment after each request
+          } catch (Exception $e) {
+            $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
+            throw $e;
           }
-        } catch (ParseError $e) {
-          $test_result->parseError($e);
-        } catch (ParseJsonError $e) {
-          $test_result->parseJsonError($e);
-        } catch (\Exception $e) {
-          $test_result->requestExecutionError($e);
+
+          $this->tearDown($test_result); // Make sure that we tear down the environment after each request
         }
+      } catch (ParseError $e) {
+        $test_result->parseError($e);
+      } catch (ParseJsonError $e) {
+        $test_result->parseJsonError($e);
+      } catch (\Exception $e) {
+        $test_result->requestExecutionError($e);
       }
     }
 
@@ -369,7 +367,7 @@
         $this->default_build_target = $this->getConfigurationOption('default_build_target');
 
         if (empty($this->default_build_target)) {
-          $this->default_build_target = $this->path . '/build';
+          $this->default_build_target = "$this->path/build";
         }
       }
 
@@ -408,5 +406,35 @@
     function getDefaultBuildTheme()
     {
       return $this->getConfigurationOption('default_build_theme', 'bootstrap');
+    }
+
+    /**
+     * @var array
+     */
+    private $social_links = false;
+
+    /**
+     * @return array
+     */
+    function getSocialLinks()
+    {
+      if ($this->social_links === false) {
+        $this->social_links = [];
+
+        if (is_array($this->getConfigurationOption('social_links'))) {
+          foreach ($this->getConfigurationOption('social_links') as $service => $handle) {
+            switch ($service) {
+              case 'twitter':
+                $this->social_links[$service] = [ 'name' => 'Twitter', 'url' => "https://twitter.com/{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+              case 'facebook':
+                $this->social_links[$service] = [ 'name' => 'Facebook', 'url' => "https://www.facebook.com/{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+              case 'google':
+                $this->social_links[$service] = [ 'name' => 'Google+', 'url' => "https://plus.google.com/+{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+            }
+          }
+        }
+      }
+
+      return $this->social_links;
     }
   }

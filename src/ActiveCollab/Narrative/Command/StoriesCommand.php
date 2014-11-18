@@ -36,10 +36,10 @@
 
         if (count($stories)) {
           $table = new Table($output);
-          $table->setHeaders([ 'Group', 'Name' ]);
+          $table->setHeaders([ 'Name', 'Group' ]);
 
           foreach($stories as $story) {
-            $table->addRow([ implode(' / ', $story->getGroups()), $story->getName() ]);
+            $table->addRow([ $story->getName(), implode(' / ', $story->getGroups()) ]);
           }
 
           $table->render();
