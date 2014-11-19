@@ -427,4 +427,76 @@
     {
       return json_encode(json_decode($json, true), JSON_PRETTY_PRINT);
     }
+
+    /**
+     * HTTP statuses
+     *
+     * @var array
+     */
+    private static $http_statuses = [
+      100 => "Continue",
+      101 => "Switching Protocols",
+      200 => "OK",
+      201 => "Created",
+      202 => "Accepted",
+      203 => "Non-Authoritative Information",
+      204 => "No Content",
+      205 => "Reset Content",
+      206 => "Partial Content",
+      300 => "Multiple Choices",
+      301 => "Moved Permanently",
+      302 => "Found",
+      303 => "See Other",
+      304 => "Not Modified",
+      305 => "Use Proxy",
+      307 => "Temporary Redirect",
+      400 => "Bad Request",
+      401 => "Unauthorized",
+      402 => "Payment Required",
+      403 => "Forbidden",
+      404 => "Not Found",
+      405 => "Method Not Allowed",
+      406 => "Not Acceptable",
+      407 => "Proxy Authentication Required",
+      408 => "Request Time-out",
+      409 => "Conflict",
+      410 => "Gone",
+      411 => "Length Required",
+      412 => "Precondition Failed",
+      413 => "Request Entity Too Large",
+      414 => "Request-URI Too Large",
+      415 => "Unsupported Media Type",
+      416 => "Requested range not satisfiable",
+      417 => "Expectation Failed",
+      500 => "Internal Server Error",
+      501 => "Not Implemented",
+      502 => "Bad Gateway",
+      503 => "Service Unavailable",
+      504 => "Gateway Time-out"
+    ];
+
+    /**
+     * Format response code
+     *
+     * @param integer $http_code
+     * @return string
+     */
+    public static function modifier_response_http_code($http_code)
+    {
+      $class = (integer) floor($http_code / 100) === 2 ? 'ok' : 'error';
+      $message = isset(self::$http_statuses[$http_code]) ? self::$http_statuses[$http_code] : 'Unknown';
+
+      return '<span class="http_code ' . $class . '" title="' . $message . '">HTTP ' . $http_code . '</span>';
+    }
+
+    /**
+     * Format response content type
+     *
+     * @param string $content_type
+     * @return string
+     */
+    public static function modifier_response_content_type($content_type)
+    {
+      return trim(array_shift(explode(';', $content_type)));
+    }
   }

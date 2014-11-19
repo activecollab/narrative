@@ -92,6 +92,19 @@ div.request div.request_and_response_details div.response_details {
   text-align: right;
 }
 
+div.request div.request_and_response_details div.response_details span.http_code {
+  border-bottom: 1px dotted #ccc;
+}
+
+div.request div.request_and_response_details div.response_details span.http_code.ok {
+  color: green;
+
+}
+
+div.request div.request_and_response_details div.response_details span.http_code.error {
+  color: red;
+}
+
 div.request div.request_and_response_details span.request_path {
 
 }
