@@ -92,6 +92,17 @@
       $this->track_coverage = (boolean) $track;
     }
 
+    /**
+     * Return true if $story has failed
+     *
+     * @param Story $story
+     * @return bool
+     */
+    public function isFailedStory(Story $story)
+    {
+      return in_array($story->getFullName(), $this->failed_stories);
+    }
+
     // ---------------------------------------------------
     //  Event recording
     // ---------------------------------------------------
@@ -190,7 +201,7 @@
         $this->total_failures += count($failures);
 
         if ($this->current_story instanceof Story && !in_array($this->current_story->getName(), $this->failed_stories)) {
-          $this->failed_stories[] = $this->current_story->getName();
+          $this->failed_stories[] = $this->current_story->getFullName();
         }
       }
 

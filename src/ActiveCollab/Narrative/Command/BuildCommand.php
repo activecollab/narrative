@@ -63,9 +63,9 @@
         $stories = $project->getStories();
         $stories_count = count($stories);
 
-        if ($stories_count > 0) {
-          $test_result = new TestResult($project, $output);
+        $test_result = new TestResult($project, $output);
 
+        if ($stories_count > 0) {
           for ($i = 0; $i < $stories_count; $i++) {
             $previous_story = $i > 0 ? $stories[$i - 1] : null;
             $next_story = $i < $stories_count - 1 ? $stories[$i + 1] : null;
@@ -73,6 +73,8 @@
             $this->buildStory($target_path, $stories[$i], $previous_story, $next_story, $project, $test_result, $output);
           }
         }
+
+        $this->buildIndex($target_path, $project, $test_result, $output);
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');
       }
@@ -85,7 +87,6 @@
      * @param Project $project
      * @param Theme $theme
      * @param OutputInterface $output
-     * @return bool
      */
     public function prepareTargetPath($target_path, Project $project, Theme $theme, OutputInterface $output)
     {
@@ -100,12 +101,29 @@
       Narrative::createDir($target_path . '/v' . $project->getApiVersion(), function($path) use (&$output) {
         $output->writeln("Directory '$path' created");
       });
+    }
 
-      Narrative::writeFile("$target_path/index.html", $this->smarty->fetch('index.tpl'), function($path) use (&$output) {
+    /**
+     * Prepare target path
+     *
+     * @param string $target_path
+     * @param Project $project
+     * @param TestResult $test_result
+     * @param OutputInterface $output
+     */
+    public function buildIndex($target_path, Project $project, TestResult &$test_result, OutputInterface $output)
+    {
+      $template = $this->smarty->createTemplate('index.tpl');
+
+      $template->assignByRef('test_result', $test_result);
+      $template->assign([
+        'project' => $project,
+        'stories' => $project->getStories()
+      ]);
+
+      Narrative::writeFile("$target_path/index.html", $template->fetch(), function($path) use (&$output) {
         $output->writeln("File '$path' created");
       });
-
-      return true;
     }
 
     /**

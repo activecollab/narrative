@@ -94,6 +94,29 @@
     }
 
     /**
+     * @var string
+     */
+    private $full_name = false;
+
+    /**
+     * Return full story name /In/This/Group/Story
+     *
+     * @return string
+     */
+    function getFullName()
+    {
+      if ($this->full_name === false) {
+        if (count($this->getGroups())) {
+          $this->full_name = implode('/', $this->getGroups()) . '/' . $this->getName();
+        } else {
+          $this->full_name = $this->getName();
+        }
+      }
+
+      return $this->full_name;
+    }
+
+    /**
      * Return story groups
      *
      * @return array
