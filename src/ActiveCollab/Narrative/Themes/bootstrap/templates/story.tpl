@@ -1,8 +1,6 @@
 <{include "header.tpl"}>
 
 <div id="content_wrapper" class="container">
-  <{include "story_sidebar.tpl"}>
-
   <div id="content">
     <{if $current_story}>
     <article>
@@ -13,7 +11,18 @@
           <{$plugin->renderComments($current_story) nofilter}>
         <{/foreach}>
       </div>
-      <{include "prev_top_next.tpl"}>
+
+      <div class="text-center">
+        <ul class="pagination">
+        <{if $previous_story}>
+          <li class="prev"><a href="#" title="<{$previous_story->getName()}>">&laquo;</a></li>
+        <{/if}>
+          <li class="top"><a href="#" onclick="window.scrollTo(0, 0); return false;">Top</a></li>
+        <{if $next_story}>
+          <li class="next"><a href="#" title="<{$next_story->getName()}>">&raquo;</a></li>
+        <{/if}>
+        </ul>
+      </div>
     </article>
   </div>
   <{else}>

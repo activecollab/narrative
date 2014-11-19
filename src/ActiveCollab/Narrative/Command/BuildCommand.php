@@ -61,12 +61,16 @@
         $this->prepareTargetPath($target_path, $theme, $output);
 
         $stories = $project->getStories();
+        $stories_count = count($stories);
 
-        if (count($stories)) {
+        if ($stories_count > 0) {
           $test_result = new TestResult($project, $output);
 
-          foreach ($project->getStories() as $story) {
-            $this->buildStory($target_path, $story, $project, $test_result, $output);
+          for ($i = 0; $i < $stories_count; $i++) {
+            $previous_story = $i > 0 ? $stories[$i - 1] : null;
+            $next_story = $i < $stories_count - 1 ? $stories[$i + 1] : null;
+
+            $this->buildStory($target_path, $stories[$i], $previous_story, $next_story, $project, $test_result, $output);
           }
         }
       } else {
@@ -100,11 +104,13 @@
      *
      * @param string $target_path
      * @param Story $story
+     * @param Story|null $previous_story
+     * @param Story|null $next_story
      * @param Project $project
      * @param TestResult $test_result
      * @param OutputInterface $output
      */
-    private function buildStory($target_path, Story $story, Project $project, TestResult &$test_result, OutputInterface $output)
+    private function buildStory($target_path, Story $story, $previous_story, $next_story, Project $project, TestResult &$test_result, OutputInterface $output)
     {
       $story_target_path = $target_path . '/';
 
@@ -122,6 +128,8 @@
 
       $this->smarty->assign([
         'current_story' => $story,
+        'previous_story' => $previous_story,
+        'next_story' => $next_story,
         'current_story_body' => $project->testAndRenderStory($story, $test_result, $this->smarty),
       ]);
 

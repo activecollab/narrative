@@ -3,11 +3,7 @@ body {
 }
 
 #content_wrapper {
-
-}
-
-#content {
-  padding-right: 320px;
+  width: 900px;
 }
 
 #content img {
@@ -34,42 +30,6 @@ body {
 #content span.option {
   font-weight: bold;
   cursor: pointer;
-}
-
-#sidebar {
-  float: right;
-  width: 300px;
-  background: #f8f8f8;
-  margin-top: 25px;
-  padding: 15px;
-  border-radius: 5px;
-}
-
-#sidebar h3 {
-  margin-top: 0;
-  text-align: center;
-  font-size: 16px;
-}
-
-#sidebar li.selected {
-  font-weight: bold;
-  font-style: italic;
-}
-
-#sidebar div.book-icon {
-  margin-bottom: 15px;
-}
-
-#sidebar.releases ol {
-  padding-left: 0;
-}
-
-#sidebar.releases ol li {
-  padding: 0 5px;
-  margin: 5px 0;
-  display: inline-block;
-  width: 23%;
-  text-align: center;
 }
 
 /** Request **/
