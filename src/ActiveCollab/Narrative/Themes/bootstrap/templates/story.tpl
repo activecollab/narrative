@@ -15,11 +15,11 @@
       <div class="text-center">
         <ul class="pagination">
         <{if $previous_story}>
-          <li class="prev"><a href="#" title="<{$previous_story->getName()}>">&laquo;</a></li>
+          <li class="prev"><{story story=$previous_story}>&laquo;<{/story}></li>
         <{/if}>
           <li class="top"><a href="#" onclick="window.scrollTo(0, 0); return false;">Top</a></li>
         <{if $next_story}>
-          <li class="next"><a href="#" title="<{$next_story->getName()}>">&raquo;</a></li>
+          <li class="next"><{story story=$next_story}>&raquo;<{/story}></li>
         <{/if}>
         </ul>
       </div>

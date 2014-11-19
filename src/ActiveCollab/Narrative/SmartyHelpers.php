@@ -148,30 +148,6 @@
     }
 
     /**
-     * @param integer $page_level
-     * @param string|null $locale
-     * @return string
-     */
-    private static function pageLevelToPrefix($page_level, $locale = null)
-    {
-      if ($locale && $locale != self::$default_locale) {
-        $page_level++;
-      }
-
-      if ($page_level > 0) {
-        $prefix = './';
-
-        for ($i = 0; $i < $page_level; $i++) {
-          $prefix .= '../';
-        }
-
-        return $prefix;
-      } else {
-        return '';
-      }
-    }
-
-    /**
      * Link to a story
      *
      * @param  array       $params
@@ -187,17 +163,25 @@
         return null;
       }
 
-      $story_name = isset($params['name']) && $params['name'] ? $params['name'] : null;
-
-      if (empty($name)) {
-        throw new ParamRequiredError('name');
+      if (isset($params['story']) && $params['story'] instanceof Story) {
+        $story = $params['story'];
+        unset($params['story']);
+      } else {
+        if (isset($params['name']) && $params['name']) {
+          $story = self::getCurrentProject()->getStory($params['name']);
+        } else {
+          throw new ParamRequiredError('name');
+        }
       }
 
-      $section = isset($params['section']) && $params['section'] ? '#s-' . Narrative::slug($params['section']) : null;
-
-      $story = $story_name ? self::getCurrentProject()->getStory($story_name) : null;
-
       if ($story instanceof Story) {
+        if (isset($params['section']) && $params['section']) {
+          $section = '#s-' . Narrative::slug($params['section']);
+          unset($params['section']);
+        } else {
+          $section = '';
+        }
+
         $params['href'] = self::getStoryUrl($story) . $section;
 
         if (empty($params['class'])) {
