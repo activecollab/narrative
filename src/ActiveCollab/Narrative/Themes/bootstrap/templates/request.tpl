@@ -10,10 +10,16 @@
     <div class="request_query"><{code inline=false highlight="json"}><{$request->getQuery()|json_encode:$smarty.const.JSON_PRETTY_PRINT nofilter}><{/code}></div>
   <{/if}>
 
-  <{if ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT') && $request->getPayload($request_variables)}>
+<{if ($request->getMethod() == 'POST' || $request->getMethod() == 'PUT')}>
+  <{if $request->getPayload($request_variables)}>
     <p class="block_head">Payload:</p>
     <div class="request_payload"><{code inline=false highlight="json"}><{$request->getPayload($request_variables)|json_encode:$smarty.const.JSON_PRETTY_PRINT nofilter}><{/code}></div>
   <{/if}>
+  <{if count($request->getFiles())}>
+    <p class="block_head">Files:</p>
+    <div class="request_files"><{code inline=false highlight="json"}><{$request->getFiles()|json_encode:$smarty.const.JSON_PRETTY_PRINT nofilter}><{/code}></div>
+  <{/if}>
+<{/if}>
   </div>
 
 <{if $response}>

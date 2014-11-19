@@ -662,6 +662,16 @@
     }
 
     /**
+     * Return request files (if any)
+     *
+     * @return array
+     */
+    public function getFiles()
+    {
+      return isset($this->source['files']) && is_array($this->source['files']) ? $this->source['files'] : [];
+    }
+
+    /**
      * Return array of files that need to be uploaded with this request
      *
      * @param string $project_path
@@ -670,20 +680,18 @@
     function getAttachments($project_path) {
       $result = [];
 
-      if(isset($this->source['files']) && is_array($this->source['files'])) {
-        foreach($this->source['files'] as $file) {
-          if(is_array($file)) {
-            list($filename, $mime_type) = $file;
-          } else {
-            $filename = $file;
-            $mime_type = 'application/octet-stream';
-          }
+      foreach($this->getFiles() as $file) {
+        if(is_array($file)) {
+          list($filename, $mime_type) = $file;
+        } else {
+          $filename = $file;
+          $mime_type = 'application/octet-stream';
+        }
 
-          $path = $project_path . '/files/' . $filename;
+        $path = $project_path . '/files/' . $filename;
 
-          if(is_file($path) && is_readable($path)) {
-            $result[] = [ $path, $mime_type ];
-          }
+        if(is_file($path) && is_readable($path)) {
+          $result[] = [ $path, $mime_type ];
         }
       }
 
