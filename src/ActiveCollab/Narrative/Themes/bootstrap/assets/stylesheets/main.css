@@ -72,8 +72,59 @@ body {
   text-align: center;
 }
 
-#video_player {
-  margin: 25px auto;
+/** Request **/
+
+div.request {
+  margin: 12px 0;
+  border-top: 1px solid #DDDDDD;
+  border-bottom: 1px solid #DDDDDD;
+  padding: 12px;
+  background: #fffde4;
+}
+
+div.request_and_response_details {
+  padding: 8px 0;
+  overflow: auto;
+}
+
+div.request div.request_and_response_details div.response_details {
+  float: right;
+  text-align: right;
+}
+
+div.request div.request_and_response_details span.request_path {
+
+}
+
+div.request div.response {
+
+}
+
+div.request p.block_head {
+  font-weight: bold;
+}
+
+span.request_method {
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: white;
+  text-transform: uppercase;
+}
+
+span.request_method.GET {
+  background: #4dab58;
+}
+
+span.request_method.POST {
+  background: #cc9900;
+}
+
+span.request_method.PUT {
+  background: #3366ff;
+}
+
+span.request_method.DELETE {
+  background: #cc3300;
 }
 
 /** CODE **/
@@ -88,13 +139,13 @@ div.syntax_higlighted pre {
   margin: 0;
   border: 0;
   border-radius: 0;
+  background: transparent;
 }
 
 div.syntax_higlighted div.syntax_higlighted_line_numbers {
   width: 60px;
   float: left;
   line-height: 130%;
-  background: #eee;
   border-right: 1px solid #ddd;
 }
 
@@ -104,19 +155,17 @@ div.syntax_higlighted div.syntax_higlighted_line_numbers pre {
   line-height: 130%;
   padding-top: 8px;
   padding-bottom: 8px;
-  background: #f8f8f8;
   color: #a8a8a8;
 }
 
 div.syntax_higlighted div.syntax_higlighted_source {
   margin-left: 60px;
-  line-height: 130%;
+  line-height: 130% !important;
   overflow-x: auto;
   background: none repeat scroll 0 0 #FFFFFF;
   border: 1px solid #DDDDDD;
-  border-left: 0px;
+  border-left: 0;
   border-radius: 0 5px 5px 0;
-  line-height: 130% !important;
 }
 
 div.syntax_higlighted div.syntax_higlighted_source pre {
@@ -185,7 +234,7 @@ div.syntax_higlighted div.syntax_higlighted_source pre {
 /** Steps **/
 
 article div.body .step {
-  overflow: none;
+  overflow: hidden;
   margin: 8px 0;
   min-height: 16px;
 }

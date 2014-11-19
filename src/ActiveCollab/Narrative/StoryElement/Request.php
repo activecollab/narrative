@@ -614,6 +614,16 @@
     }
 
     /**
+     * Return query parameters
+     *
+     * @return array
+     */
+    function getQuery()
+    {
+      return isset($this->source['query']) && is_array($this->source['query']) ? $this->source['query'] : [];
+    }
+
+    /**
      * Return request payload
      *
      * @param array $variables
@@ -705,6 +715,16 @@
      */
     function executeAs() {
       return isset($this->source['as']) && $this->source['as'] ? $this->source['as'] : Connector::DEFAULT_PERSONA;
+    }
+
+    /**
+     * Return true if this request should be executed as default persona
+     *
+     * @return bool
+     */
+    function executeAsDefaultPersona()
+    {
+      return isset($this->source['as']) && $this->source['as'] ? $this->source['as'] === Connector::DEFAULT_PERSONA : true;
     }
 
     /**

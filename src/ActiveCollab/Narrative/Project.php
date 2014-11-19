@@ -2,6 +2,7 @@
 
   namespace ActiveCollab\Narrative;
 
+  use ActiveCollab\Narrative;
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
   use ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
   use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
@@ -299,26 +300,43 @@
 
             foreach ($elements as $element) {
               if ($element instanceof Request) {
-                list($http_code, $content_type, $response) = $element->execute($this, $variables, $test_result);
+                if ($element->isPreparation()) {
+                  $element->execute($this, $variables, $test_result);
+                } else {
+                  list($http_code, $content_type, $response) = $element->execute($this, $variables, $test_result);
 
-                $request_template->assign([
-                  'request' => $element,
-                  'request_id' => $request_id++,
-                  'http_code' => $http_code,
-                  'content_type' => $content_type,
-                  'response' => $response,
-                ]);
+                  $request_template->assign([
+                    'request' => $element,
+                    'request_id' => $request_id++,
+                    'http_code' => $http_code,
+                    'content_type' => $content_type,
+                    'response' => $response,
+                  ]);
 
-                $request_template->assignByRef('request_variables', $variables);
+                  $request_template->assignByRef('request_variables', $variables);
 
-                $result .= $request_template->fetch();
+                  $result .= $request_template->fetch();
+                }
               } elseif ($element instanceof Sleep) {
                 $element->execute($this, $test_result);
 
                 $result .= '<div class="sleep">Sleeping for ' . $element->howLong() . ' seconds</div>';
               } elseif ($element instanceof Text) {
-                $result .= nl2br($element->getSource());
+                $result .= $this->renderText($story, $element, $smarty);
               }
+            }
+
+            if (count($personas = $this->getConnector()->getPersonas()) > 1) {
+              $persona_names = [];
+
+              foreach ($personas as $persona => $persona_settings) {
+                if ($persona === Connector::DEFAULT_PERSONA) {
+                  continue;
+                }
+                $persona_names[] = $persona;
+              }
+
+              $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '</p>' . $result;
             }
           } catch (Exception $e) {
             $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
@@ -336,6 +354,25 @@
       }
 
       return $result;
+    }
+
+    /**
+     * @param Story $story
+     * @param Text $element
+     * @param Smarty $smarty
+     * @return string
+     */
+    private function renderText(Story &$story, Text $element, Smarty &$smarty)
+    {
+      if (strpos($element->getSource(), '<{') === false) {
+        return Narrative::markdownToHtml($element->getSource());
+      } else {
+        SmartyHelpers::setCurrentStory($story);
+        $rendered_text = Narrative::markdownToHtml($smarty->createTemplate('eval:' . $element->getSource())->fetch());
+        SmartyHelpers::setCurrentStory(null);
+
+        return $rendered_text;
+      }
     }
 
     // ---------------------------------------------------
@@ -366,6 +403,8 @@
     public function tearDown(TestResult &$test_result) {
       $test_result->storyTearDown();
 
+      $this->getConnector()->forgetNonDefaultPersonas();
+
       if(isset($this->configuration['tear_down']) && is_array($this->configuration['tear_down'])) {
         foreach($this->configuration['tear_down'] as $command) {
           $this->executeCommand($command);
@@ -378,7 +417,7 @@
      *
      * @param mixed $c
      * @return string
-     * @throws Error\CommandError
+     * @throws CommandError
      */
     private function executeCommand($c) {
       $original_working_dir = getcwd();

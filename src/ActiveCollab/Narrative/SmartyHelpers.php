@@ -2,7 +2,7 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative, Smarty, Smarty_Internal_Template, ActiveCollab\Narrative\Error\ParamRequiredError;
+  use ActiveCollab\Narrative, Smarty, Smarty_Internal_Template, ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\ParamRequiredError;
 
   /**
    * Help element text helpers
@@ -11,6 +11,36 @@
    */
   class SmartyHelpers
   {
+    /**
+     * @var Story
+     */
+    private static $current_story;
+
+    /**
+     * Return current story
+     *
+     * @return Story
+     */
+    public static function &getCurrentStory()
+    {
+      return self::$current_story;
+    }
+
+    /**
+     * Set current story
+     *
+     * @param Story|null $story
+     * @throws Error
+     */
+    public static function setCurrentStory($story)
+    {
+      if ($story instanceof Story || $story === null) {
+        self::$current_story = $story;
+      } else {
+        throw new Error('Story instance or NULL expected');
+      }
+    }
+
     /**
      * @param array $params
      * @return string
@@ -210,6 +240,32 @@
     }
 
     /**
+     * Wrap API commands using this block
+     *
+     * @param  array   $params
+     * @param  string  $content
+     * @param  Smarty  $smarty
+     * @param  boolean $repeat
+     * @return string
+     */
+    public static function block_command($params, $content, &$smarty, &$repeat)
+    {
+      if ($repeat) {
+        return null;
+      }
+
+      if (empty($params['class'])) {
+        $params['class'] = 'outlined_inline outlined_inline_mono path';
+      } else {
+        $params['class'] .= ' outlined_inline outlined_inline_mono path';
+      }
+
+      return Narrative::htmlTag('span', $params, function () use ($content) {
+        return Narrative::clean(trim($content));
+      });
+    }
+
+    /**
      * Code block
      *
      * @param  array   $params
@@ -318,6 +374,47 @@
     public static function function_narrative_version()
     {
       return Narrative::VERSION;
+    }
+
+    /**
+     * @return string
+     */
+    public static function function_GET()
+    {
+      return self::renderMethod('GET');
+    }
+
+    /**
+     * @return string
+     */
+    public static function function_POST()
+    {
+      return self::renderMethod('POST');
+    }
+
+    /**
+     * @return string
+     */
+    public static function function_PUT()
+    {
+      return self::renderMethod('PUT');
+    }
+
+    /**
+     * @return string
+     */
+    public static function function_DELETE()
+    {
+      return self::renderMethod('DELETE');
+    }
+
+    /**
+     * @param string $method
+     * @return string
+     */
+    private static function renderMethod($method)
+    {
+      return '<span class="request_method ' . $method . '">' . $method . '</span>';
     }
 
     /**

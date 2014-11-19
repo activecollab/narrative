@@ -23,6 +23,36 @@
   <{foreach $plugins as $plugin}>
     <{$plugin->renderHead() nofilter}>
   <{/foreach}>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('#content').on('click', 'a.toggle_response', function(event) {
+        var link = $(this);
+
+        if (typeof(event.shiftKey) != 'undefined' && event.shiftKey) {
+          if (link.text() == 'Hide') {
+            $('div.response').hide();
+            $('a.toggle_response').text('Show');
+          } else {
+            $('div.response').show();
+            $('a.toggle_response').text('Hide');
+          }
+        } else {
+          var request = link.parents('div.request:first');
+
+          if (request.find('div.response:visible').length) {
+            request.find('div.response').hide();
+            link.text('Show');
+          } else {
+            request.find('div.response').show();
+            link.text('Hide');
+          }
+        }
+
+        return false;
+      });
+    });
+  </script>
 </head>
 
 <body>
