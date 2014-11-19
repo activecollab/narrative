@@ -12,6 +12,16 @@
     const VERSION = '0.9.0';
 
     /**
+     * Check if we are in testing mode
+     *
+     * @return bool
+     */
+    public static function isTesting()
+    {
+      return true;
+    }
+
+    /**
      * @var Smarty
      */
     private static $smarty = false;
@@ -43,6 +53,8 @@
         self::$smarty->left_delimiter = '<{';
         self::$smarty->right_delimiter = '}>';
         self::$smarty->registerFilter('variable', '\ActiveCollab\Narrative::clean'); // {$foo nofilter}
+
+        SmartyHelpers::setCurrentProject($project);
 
         $helper_class = new ReflectionClass('\ActiveCollab\Narrative\SmartyHelpers');
 
@@ -201,6 +213,10 @@
 
       return $result;
     }
+
+    // ---------------------------------------------------
+    //  File management
+    // ---------------------------------------------------
 
     /**
      * @param string $source_path

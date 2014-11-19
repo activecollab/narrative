@@ -12,6 +12,36 @@
   class SmartyHelpers
   {
     /**
+     * @var Project
+     */
+    private static $current_project;
+
+    /**
+     * Return current project
+     *
+     * @return Project
+     */
+    public static function &getCurrentProject()
+    {
+      return self::$current_project;
+    }
+
+    /**
+     * Set current project
+     *
+     * @param Project|null $project
+     * @throws Error
+     */
+    public static function setCurrentProject($project)
+    {
+      if ($project instanceof Project || $project === null) {
+        self::$current_project = $project;
+      } else {
+        throw new Error('Project instance or NULL expected');
+      }
+    }
+
+    /**
      * @var Story
      */
     private static $current_story;
@@ -41,16 +71,16 @@
       }
     }
 
+    // ---------------------------------------------------
+    //  Links
+    // ---------------------------------------------------
+
     /**
-     * @param array $params
      * @return string
      */
-    public static function function_stylesheet_url($params)
+    public static function function_stylesheet_url()
     {
-      $page_level = isset($params['page_level']) ? (integer) $params['page_level'] : 0;
-      $locale = isset($params['locale']) && $params['locale'] ? $params['locale'] : null;
-
-      return '<link rel="stylesheet" type="text/css" href="' . self::pageLevelToPrefix($page_level, $locale) . "assets/stylesheets/main.css?timestamp=" . time() . '">';
+      return '<link rel="stylesheet" type="text/css" href="' . self::getCurrentPagePrefix() . "assets/stylesheets/main.css?timestamp=" . time() . '">';
     }
 
     /**
@@ -61,9 +91,15 @@
      */
     public static function function_navigation_link($params)
     {
-      $page_level = isset($params['page_level']) && (integer) $params['page_level'] > 0 ? (integer) $params['page_level'] : 0;
+      if (isset($params['section'])) {
+        if ($params['section'] === 'stories') {
+          return self::getCurrentPagePrefix() . 'stories.html';
+        } elseif ($params['section'] == 'routes') {
+          return self::getCurrentPagePrefix() . 'routes.html';
+        }
+      }
 
-      return self::pageLevelToPrefix($page_level) . 'index.html';
+      return self::getCurrentPagePrefix() . 'index.html';
     }
 
     /**
@@ -76,14 +112,12 @@
     public static function function_theme_asset($params)
     {
       $name = isset($params['name']) && $params['name'] ? ltrim($params['name'], '/') : null;
-      $page_level = isset($params['page_level']) ? (integer) $params['page_level'] : 0;
-      $current_locale = isset($params['current_locale']) ? $params['current_locale'] : self::$default_locale;
 
       if (empty($name)) {
         throw new ParamRequiredError('name parameter is required');
       }
 
-      return self::pageLevelToPrefix($page_level, $current_locale) . "assets/$name";
+      return self::getCurrentPagePrefix() . "assets/$name";
     }
 
     /**
@@ -135,6 +169,108 @@
       } else {
         return '';
       }
+    }
+
+    /**
+     * Link to a story
+     *
+     * @param  array       $params
+     * @param  string      $content
+     * @param  Smarty      $smarty
+     * @param  boolean     $repeat
+     * @return string|null
+     * @throws ParamRequiredError
+     */
+    public static function block_story($params, $content, &$smarty, &$repeat)
+    {
+      if ($repeat) {
+        return null;
+      }
+
+      $story_name = isset($params['name']) && $params['name'] ? $params['name'] : null;
+
+      if (empty($name)) {
+        throw new ParamRequiredError('name');
+      }
+
+      $section = isset($params['section']) && $params['section'] ? '#s-' . Narrative::slug($params['section']) : null;
+
+      $story = $story_name ? self::getCurrentProject()->getStory($story_name) : null;
+
+      if ($story instanceof Story) {
+        $params['href'] = self::getStoryUrl($story) . $section;
+
+        if (empty($params['class'])) {
+          $params['class'] = 'link_to_story';
+        } else {
+          $params['class'] .= ' link_to_story';
+        }
+
+        $params['data-story-name'] = $story->getName();
+
+        return Narrative::htmlTag('a', $params, $content);
+      } else {
+        $development_error_message = 'Story not found';
+      }
+
+      if (Narrative::isTesting() && isset($development_error_message)) {
+        return '<span style="color: red; border-bottom: 1px dotted red; cursor: help;" title="Invalid story link: ' . Narrative::clean($development_error_message) . '">' . $content . '</span>';
+      } else {
+        return $content;
+      }
+    }
+
+    /**
+     * Return story URL relative to the current story
+     *
+     * @param Story $story
+     * @return string
+     */
+    static private function getStoryUrl(Story $story)
+    {
+      $url = self::getCurrentPagePrefix();
+
+      foreach (array_merge([ 'v' . self::$current_project->getApiVersion() ], $story->getGroups()) as $group) {
+        $url .= Narrative::slug($group) . '/';
+      }
+
+      return $url . Narrative::slug($story->getName()) . '.html';
+    }
+
+    /**
+     * Return current story level
+     *
+     * @return int
+     */
+    static private function getCurrentStoryLevel()
+    {
+      if (self::$current_story instanceof Story) {
+        if (is_array(self::$current_story->getGroups())) {
+          return count(self::$current_story->getGroups()) + 1;
+        } else {
+          return 1;
+        }
+      } else {
+        return 0;
+      }
+    }
+
+    /**
+     * Return current page prefix
+     *
+     * @return string
+     */
+    static private function getCurrentPagePrefix()
+    {
+      $current_story_level = self::getCurrentStoryLevel();
+
+      $url = '';
+
+      for ($i = 0; $i < $current_story_level; $i++) {
+        $url .= '../';
+      }
+
+      return $url;
     }
 
     /**
@@ -498,5 +634,36 @@
     public static function modifier_response_content_type($content_type)
     {
       return trim(array_shift(explode(';', $content_type)));
+    }
+
+    /**
+     * Format response content type
+     *
+     * @param Story|null $story
+     * @return integer
+     */
+    public static function modifier_story_level($story)
+    {
+      return $story instanceof Story ? count($story->getGroups()) : 0;
+    }
+
+    /**
+     * @return string
+     */
+    public static function function_stories_index()
+    {
+      $result = '<ul>';
+
+      foreach (self::$current_project->getStories() as $story) {
+        $groups = $story->getGroups();
+
+        if (is_array($groups) && count($groups)) {
+          $result .= '<li><a href="' . self::getStoryUrl($story) . '">' . Narrative::clean(implode(' / ', $groups)) . ' / ' . Narrative::clean($story->getName()) . ' </a>';
+        } else {
+          $result .= '<li><a href="' . self::getStoryUrl($story) . '">' . Narrative::clean($story->getName()) . '</a>';
+        }
+      }
+
+      return $result . '</ul>';
     }
   }

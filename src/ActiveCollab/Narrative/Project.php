@@ -367,11 +367,7 @@
       if (strpos($element->getSource(), '<{') === false) {
         return Narrative::markdownToHtml($element->getSource());
       } else {
-        SmartyHelpers::setCurrentStory($story);
-        $rendered_text = Narrative::markdownToHtml($smarty->createTemplate('eval:' . $element->getSource())->fetch());
-        SmartyHelpers::setCurrentStory(null);
-
-        return $rendered_text;
+        return Narrative::markdownToHtml($smarty->createTemplate('eval:' . $element->getSource())->fetch());
       }
     }
 
@@ -441,6 +437,16 @@
       }
 
       return $result;
+    }
+
+    /**
+     * Return major API version number
+     *
+     * @return int
+     */
+    public function getApiVersion()
+    {
+      return (integer) $this->getConfigurationOption('api_version', 1);
     }
 
     /**

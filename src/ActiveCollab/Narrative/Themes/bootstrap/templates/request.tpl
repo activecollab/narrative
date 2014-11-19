@@ -1,4 +1,4 @@
-<div class="request" role="tabpanel">
+<div class="request">
   <div class="request_and_response_details">
     <div class="response_details">Response: <{$http_code|response_http_code nofilter}>, <{$content_type|response_content_type}><{if $response}> (<a href="#" class="toggle_response" title="Click to show/hide response. Shift+Click to show/hide all responses">Hide</a>)<{/if}></div>
     <div class="request_details"><span class="request_method <{$request->getMethod()}>"><{$request->getMethod()}></span> <span class="request_path"><{$request->getPath()}></span> <{if !$request->executeAsDefaultPersona()}><span class="request_persona">(as <{$request->executeAs()}>)</span><{/if}></div>

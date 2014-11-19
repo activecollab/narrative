@@ -2,7 +2,7 @@
 
   namespace ActiveCollab\Narrative\Command;
 
-  use ActiveCollab\Narrative, ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError, ActiveCollab\Narrative\TestResult;
+  use ActiveCollab\Narrative, ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\Theme, ActiveCollab\Narrative\Error\ThemeNotFoundError, ActiveCollab\Narrative\TestResult, ActiveCollab\Narrative\SmartyHelpers;
   use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Input\InputOption;
   use Smarty;
 
@@ -58,7 +58,7 @@
 
         $this->smarty =& Narrative::initSmarty($project, $theme);
 
-        $this->prepareTargetPath($target_path, $theme, $output);
+        $this->prepareTargetPath($target_path, $project, $theme, $output);
 
         $stories = $project->getStories();
         $stories_count = count($stories);
@@ -82,11 +82,12 @@
      * Prepare target path
      *
      * @param string $target_path
+     * @param Project $project
      * @param Theme $theme
      * @param OutputInterface $output
      * @return bool
      */
-    public function prepareTargetPath($target_path, Theme $theme, OutputInterface $output)
+    public function prepareTargetPath($target_path, Project $project, Theme $theme, OutputInterface $output)
     {
       Narrative::clearDir($target_path, function($path) use (&$output) {
         $output->writeln("$path deleted");
@@ -94,6 +95,14 @@
 
       Narrative::copyDir($theme->getPath() . '/assets', "$target_path/assets", function($path) use (&$output) {
         $output->writeln("$path copied");
+      });
+
+      Narrative::createDir($target_path . '/v' . $project->getApiVersion(), function($path) use (&$output) {
+        $output->writeln("Directory '$path' created");
+      });
+
+      Narrative::writeFile("$target_path/index.html", $this->smarty->fetch('index.tpl'), function($path) use (&$output) {
+        $output->writeln("File '$path' created");
       });
 
       return true;
@@ -112,7 +121,7 @@
      */
     private function buildStory($target_path, Story $story, $previous_story, $next_story, Project $project, TestResult &$test_result, OutputInterface $output)
     {
-      $story_target_path = $target_path . '/';
+      $story_target_path = $target_path . '/v' . $project->getApiVersion() . '/';
 
       foreach ($story->getGroups() as $group) {
         $story_target_path .= Narrative::slug($group) . '/';
@@ -126,6 +135,8 @@
 
       $story_target_path .= Narrative::slug($story->getName()) . '.html';
 
+      SmartyHelpers::setCurrentStory($story);
+
       $this->smarty->assign([
         'current_story' => $story,
         'previous_story' => $previous_story,
@@ -136,6 +147,8 @@
       Narrative::writeFile($story_target_path, $this->smarty->fetch('story.tpl'), function($path) use (&$output) {
         $output->writeln("File '$path' created");
       });
+
+      SmartyHelpers::setCurrentStory(null);
     }
 
     /**

@@ -18,7 +18,7 @@
   <!-- Latest compiled and minified JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
-  <{stylesheet_url page_level=$page_level locale=$current_locale}>
+  <{stylesheet_url}>
 
   <{foreach $plugins as $plugin}>
     <{$plugin->renderHead() nofilter}>
@@ -74,15 +74,9 @@
 
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
-          <li<{if $current_section == 'whats_new'}> class="active"<{/if}>><a href="<{navigation_link section=whats_new page_level=$page_level}>">What's New?</a></li>
-          <li<{if $current_section == 'releases'}> class="active"<{/if}>><a href="<{navigation_link section=releases page_level=$page_level}>">Release Notes</a></li>
-          <li<{if $current_section == 'books'}> class="active"<{/if}>><a href="<{navigation_link section=books page_level=$page_level}>">Manuals &amp; Guides</a></li>
+          <li<{if $current_section == 'stories'}> class="active"<{/if}>><a href="<{navigation_link section=stories page_level=$current_story|story_level}>">Stories</a></li>
+          <li<{if $current_section == 'routes'}> class="active"<{/if}>><a href="<{navigation_link section=routes page_level=$current_story|story_level}>">Routes</a></li>
         </ul>
-        <!-- <form class="navbar-form navbar-right" role="search">
-          <div class="form-group">
-            <input type="text" class="form-control" placeholder="Search">
-          </div>
-        </form> -->
       </div>
     </div>
   </nav>

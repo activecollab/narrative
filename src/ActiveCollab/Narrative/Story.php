@@ -24,7 +24,7 @@
     /**
      * @var array
      */
-    private $groups;
+    private $groups = [];
 
     /**
      * Construct the story instance
