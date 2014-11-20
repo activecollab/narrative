@@ -268,7 +268,7 @@
     public static function function_page($params, &$smarty)
     {
       if (isset($params['name']) && $params['name']) {
-        $story_path = self::$current_project->getPath() . '/stories/' . $params['name'] . '.md';
+        $story_path = self::$current_project->getPath() . '/pages/' . $params['name'] . '.md';
 
         if (is_file($story_path)) {
           $content = file_get_contents($story_path);

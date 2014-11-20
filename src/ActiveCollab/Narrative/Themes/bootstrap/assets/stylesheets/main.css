@@ -17,6 +17,7 @@ body {
   padding: 1px 4px;
   font-size: 12px;
   white-space: nowrap;
+  color: #333;
 }
 
 #content span.outlined_inline.outlined_inline_mono, #content code {
