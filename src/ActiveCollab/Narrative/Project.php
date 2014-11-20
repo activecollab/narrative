@@ -338,7 +338,7 @@
                 $persona_names[] = $persona;
               }
 
-              $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '</p>' . $result;
+              $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '.</p>' . $result;
             }
           } catch (Exception $e) {
             $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
