@@ -191,8 +191,10 @@
      * @return Story|null
      */
     public function getStory($name) {
+      $name = trim($name, '/');
+
       foreach($this->getStories() as $story) {
-        if($story->getName() === $name) {
+        if($story->getFullName() == $name) {
           return $story;
         }
       }
