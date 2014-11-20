@@ -258,6 +258,35 @@
     }
 
     /**
+     * Render page content
+     *
+     * @param array $params
+     * @param Smarty_Internal_Template $smarty
+     * @return string
+     * @throws ParamRequiredError
+     */
+    public static function function_page($params, &$smarty)
+    {
+      if (isset($params['name']) && $params['name']) {
+        $story_path = self::$current_project->getPath() . '/stories/' . $params['name'] . '.md';
+
+        if (is_file($story_path)) {
+          $content = file_get_contents($story_path);
+
+          if (strpos($content, '<{') === false) {
+            return Narrative::markdownToHtml($content);
+          } else {
+            return Narrative::markdownToHtml($smarty->fetch('eval:' . $content));
+          }
+        }
+
+        return '';
+      } else {
+        throw new ParamRequiredError('name');
+      }
+    }
+
+    /**
      * Note block
      *
      * @param  array   $params

@@ -5,7 +5,7 @@
     <article>
       <h1><{$project->getName()}></h1>
       <div class="body">
-        <p>Welcome</p>
+        <{page name='index'}>
 
         <ul>
         <{foreach $stories as $story}>

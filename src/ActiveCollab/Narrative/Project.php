@@ -373,26 +373,6 @@
       }
     }
 
-    /**
-     * @param string $name
-     * @param Smarty $smarty
-     * @return string
-     */
-    private function renderPage($name, Smarty &$smarty)
-    {
-      if (is_file("$this->path/pages/$name.md")) {
-        $content = file_get_contents("$this->path/pages/$name.md");
-
-        if (strpos($content, '<{') === false) {
-          return Narrative::markdownToHtml($content);
-        } else {
-          return Narrative::markdownToHtml($smarty->createTemplate('eval:' . $content)->fetch());
-        }
-      }
-
-      return '';
-    }
-
     // ---------------------------------------------------
     //  Set up and tear down
     // ---------------------------------------------------
