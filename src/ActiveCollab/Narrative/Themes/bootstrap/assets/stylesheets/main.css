@@ -10,7 +10,7 @@ body {
   max-width: 100%;
 }
 
-#content span.outlined_inline {
+#content span.outlined_inline, #content code {
   border: 1px solid #ccc;
   border-radius: 2px;
   background: #f8f8f8;
@@ -19,7 +19,7 @@ body {
   white-space: nowrap;
 }
 
-#content span.outlined_inline.outlined_inline_mono {
+#content span.outlined_inline.outlined_inline_mono, #content code {
   font-family: monospace;
 }
 

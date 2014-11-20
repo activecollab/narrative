@@ -200,7 +200,7 @@
         $this->total_assertions += count($failures);
         $this->total_failures += count($failures);
 
-        if ($this->current_story instanceof Story && !in_array($this->current_story->getName(), $this->failed_stories)) {
+        if ($this->current_story instanceof Story && !in_array($this->current_story->getFullName(), $this->failed_stories)) {
           $this->failed_stories[] = $this->current_story->getFullName();
         }
       }
