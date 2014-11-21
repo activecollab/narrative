@@ -5,7 +5,7 @@
   use ActiveCollab\Narrative;
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
   use ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
-  use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector, ActiveCollab\SDK\Exception;
+  use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\SDK\Exception;
   use Smarty;
 
   /**
@@ -92,10 +92,38 @@
      */
     public function &getConnector() {
       if($this->connector === false) {
-        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://feather.dev', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
+        list ($connector_class, $connector_settings) = $this->getConnectorSettings();
+
+        if ($connector_class) {
+          if (isset($connector_settings['file'])) {
+            require_once $connector_settings['file'];
+          }
+
+          if ((new \ReflectionClass($connector_class))->isSubclassOf('ActiveCollab\Narrative\Connector\Connector')) {
+            $this->connector = new $connector_class($connector_settings);
+          }
+        }
       }
 
       return $this->connector;
+    }
+
+    /**
+     * Return connector settings
+     *
+     * @return array
+     */
+    private function getConnectorSettings()
+    {
+      $connector = $this->getConfigurationOption('connector');
+
+      if (is_array($connector) && count($connector) === 1) {
+        foreach ($connector as $connector_class => $connector_settings) {
+          return [ $connector_class, $connector_settings ];
+        }
+      }
+
+      return [ null, null ];
     }
 
     /**

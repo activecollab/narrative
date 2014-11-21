@@ -11,7 +11,7 @@
    *
    * @package ActiveCollab\Narrative\Connector
    */
-  class ActiveCollabSdkConnector extends Connector {
+  class ActiveCollabSdk extends Connector {
 
     /**
      * Construct and configure the connector
