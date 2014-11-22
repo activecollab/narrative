@@ -2,10 +2,8 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative;
-  use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
+  use ActiveCollab\Narrative, ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
   use ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
-  use ActiveCollab\Narrative\Connector\Connector, ActiveCollab\SDK\Exception;
   use Smarty;
 
   /**
@@ -290,7 +288,7 @@
                 $element->execute($this, $test_result);
               }
             }
-          } catch (Exception $e) {
+          } catch (Narrative\Error\ConnectorError $e) {
             $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
             throw $e;
           }
@@ -368,7 +366,7 @@
 
               $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '.</p>' . $result;
             }
-          } catch (Exception $e) {
+          } catch (Narrative\Error\ConnectorError $e) {
             $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
             throw $e;
           }

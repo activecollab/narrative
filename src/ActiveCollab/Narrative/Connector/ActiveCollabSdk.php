@@ -1,8 +1,7 @@
 <?php
-
   namespace ActiveCollab\Narrative\Connector;
 
-  use ActiveCollab\Narrative\Error\ConnectorError;
+  use ActiveCollab\Narrative\Error\ConnectorError, \Exception;
   use ActiveCollab\SDK\Client as API;
   use ActiveCollab\SDK\Response AS Response;
 
@@ -11,8 +10,8 @@
    *
    * @package ActiveCollab\Narrative\Connector
    */
-  class ActiveCollabSdk extends Connector {
-
+  class ActiveCollabSdk extends Connector
+  {
     /**
      * Construct and configure the connector
      *
@@ -44,11 +43,16 @@
      * @param string $path
      * @param string $persona
      * @return Response
+     * @throws ConnectorError
      */
     function get($path, $persona = Connector::DEFAULT_PERSONA)
     {
-      API::setKey($this->getPersona($persona)['token']);
-      return API::get($path);
+      try {
+        API::setKey($this->getPersona($persona)['token']);
+        return API::get($path);
+      } catch (Exception $e) {
+        throw new ConnectorError();
+      }
     }
 
     /**
@@ -59,11 +63,16 @@
      * @param array|null $attachments
      * @param string $persona
      * @return Response
+     * @throws ConnectorError
      */
     function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
     {
-      API::setKey($this->getPersona($persona)['token']);
-      return Api::post($path, $params, $attachments);
+      try {
+        API::setKey($this->getPersona($persona)['token']);
+        return Api::post($path, $params, $attachments);
+      } catch (Exception $e) {
+        throw new ConnectorError();
+      }
     }
 
     /**
@@ -74,11 +83,16 @@
      * @param array|null $attachments
      * @param string $persona
      * @return Response
+     * @throws ConnectorError
      */
     function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
     {
-      API::setKey($this->getPersona($persona)['token']);
-      return API::put($path, $params, $attachments);
+      try {
+        API::setKey($this->getPersona($persona)['token']);
+        return API::put($path, $params, $attachments);
+      } catch (Exception $e) {
+        throw new ConnectorError();
+      }
     }
 
     /**
@@ -88,11 +102,16 @@
      * @param array|null $params
      * @param string $persona
      * @return Response
+     * @throws ConnectorError
      */
     function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA)
     {
-      API::setKey($this->getPersona($persona)['token']);
-      return API::delete($path, $params);
+      try {
+        API::setKey($this->getPersona($persona)['token']);
+        return API::delete($path, $params);
+      } catch (Exception $e) {
+        throw new ConnectorError();
+      }
     }
 
     /**
@@ -156,5 +175,4 @@
 
       return false;
     }
-
   }

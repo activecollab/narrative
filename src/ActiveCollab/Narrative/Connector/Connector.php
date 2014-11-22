@@ -3,7 +3,6 @@
   namespace ActiveCollab\Narrative\Connector;
 
   use ActiveCollab\Narrative\Error\ConnectorError;
-  use ActiveCollab\SDK\Response;
 
   /**
    * Basic connector
