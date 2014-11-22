@@ -1,11 +1,9 @@
 <?php
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative\Error\ParseError;
-  use ActiveCollab\Narrative\Error\ParseJsonError;
+  use ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ParseJsonError;
   use Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table, \Exception;
   use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\Connector\Connector;
-  use ActiveCollab\SDK\Response;
   use League\Csv\Reader;
 
   /**
@@ -179,7 +177,7 @@
     }
 
     /**
-     * @param Response|int $response
+     * @param ConnectorResponse|int $response
      * @param array $passes
      * @param array $failures
      * @param float|null $request_time
@@ -205,7 +203,7 @@
         }
       }
 
-      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
+      $request_time = $response instanceof ConnectorResponse ? $response->getTotalTime() : (float) $request_time;
 
       $this->total_request_time += $request_time;
 
@@ -217,7 +215,7 @@
     }
 
     /**
-     * @param Response|int $response
+     * @param ConnectorResponse|int $response
      * @param array $failures
      * @param float|null $request_time
      * @param string $persona
@@ -233,7 +231,7 @@
         $this->output->writeln('');
       }
 
-      $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
+      $http_code = $response instanceof ConnectorResponse ? $response->getHttpCode() : (integer) $response;
       $prep = $is_prep ? ' <question>[PREP]</question>' : '';
       $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
 
@@ -248,7 +246,7 @@
       }
 
       // Output response, if needed
-      if($dump_response && $response instanceof Response) {
+      if($dump_response && $response instanceof ConnectorResponse) {
 
         // JSON
         if($response->isJson()) {

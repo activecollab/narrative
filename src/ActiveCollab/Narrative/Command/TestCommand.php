@@ -2,18 +2,8 @@
 
   namespace ActiveCollab\Narrative\Command;
 
-  use ActiveCollab\Narrative\Error\ParseError;
-  use ActiveCollab\Narrative\Error\ParseJsonError;
-  use ActiveCollab\Narrative\Project;
-  use ActiveCollab\Narrative\Story;
-  use ActiveCollab\Narrative\StoryElement\Request;
-  use ActiveCollab\Narrative\TestResult;
-  use ActiveCollab\SDK\Exception;
-  use ActiveCollab\SDK\Response;
-  use Symfony\Component\Console\Command\Command;
-  use Symfony\Component\Console\Input\InputInterface;
-  use Symfony\Component\Console\Input\InputOption;
-  use Symfony\Component\Console\Output\OutputInterface;
+  use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Story, ActiveCollab\Narrative\TestResult;
+  use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Input\InputOption, Symfony\Component\Console\Output\OutputInterface;
 
   /**
    * Test all stories command

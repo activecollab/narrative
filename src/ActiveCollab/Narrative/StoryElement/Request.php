@@ -2,10 +2,10 @@
 
   namespace ActiveCollab\Narrative\StoryElement;
 
+  use ActiveCollab\Narrative\ConnectorResponse;
   use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Connector\Connector;
   use ActiveCollab\Narrative\Error\NoValidatorError, ActiveCollab\Narrative\Error\ValidatorParamsError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\RequestMethodError;
   use ActiveCollab\Narrative\TestResult;
-  use ActiveCollab\SDK\Response;
   use Peekmo\JsonPath\JsonStore;
 
   /**
@@ -76,7 +76,7 @@
         if($response) {
           $passes = $failures = [];
 
-          if($response instanceof Response && $response->getHttpCode() === 500) {
+          if($response instanceof ConnectorResponse && $response->getHttpCode() === 500) {
             if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
               // If dump_response is explicitly set to FALSE, don't turn it on
             } else {
@@ -97,7 +97,7 @@
             }
           }
 
-          return $response instanceof Response ? [ $response->getHttpCode(), $response->getContentType(), $response->getBody() ] : [ 200, 'text/html', '' ];
+          return $response instanceof ConnectorResponse ? [ $response->getHttpCode(), $response->getContentType(), $response->getBody() ] : [ 200, 'text/html', '' ];
         } else {
           $test_result->requestFailure();
         }
@@ -115,10 +115,10 @@
     /**
      * Validate response
      *
-     * @param Response|int $response
-     * @param array        $variables
-     * @param array        $passes
-     * @param array        $failures
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @return boolean
      */
     private function validate(&$response, array &$variables, array &$passes, array &$failures) {
@@ -134,12 +134,12 @@
     /**
      * Return validator method name
      *
-     * @param string       $validator
-     * @param mixed        $validator_data
-     * @param Response|int $response
-     * @param array        $variables
-     * @param array        $passes
-     * @param array        $failures
+     * @param string                $validator
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @throws \ActiveCollab\Narrative\Error\NoValidatorError
      */
     private function callValidator($validator, $validator_data, &$response, array &$variables, array &$passes, array &$failures) {
@@ -157,14 +157,14 @@
     /**
      * Validate if we got proper HTTP status code
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateHttpCode($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         $code = $response->getHttpCode();
       } elseif(is_int($response)) {
         $code = $response;
@@ -182,14 +182,14 @@
     /**
      * Validate if we got proper content type
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateContentType($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         if($response->getContentType() == $validator_data) {
           $passes[] = "Got " . $response->getContentType();
         } else {
@@ -203,14 +203,14 @@
     /**
      * Validate if we got proper content length
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateContentLength($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         if($response->getContentLength() == $validator_data) {
           $passes[] = "Content length is " . $response->getContentLength();
         } else {
@@ -224,14 +224,14 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateIsJson($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         $passes[] = 'Response is JSON';
       } else {
         $failures[] = 'Response is not JSON';
@@ -241,14 +241,14 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateJsonCountElements($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         $json = $response->getJson();
 
         if(is_array($json)) {
@@ -270,15 +270,15 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @throws \ActiveCollab\Narrative\Error\ValidatorParamsError
      */
     protected function validateJsonPath($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         if(is_array($validator_data)) {
           $json = $response->getJson(); // Fetch JSON only when we have an array of checkers
 
@@ -492,13 +492,13 @@
     /**
      * Update list of variables collected by the story
      *
-     * @param Response $response
-     * @param array $variables
-     * @param array $failures
+     * @param ConnectorResponse $response
+     * @param array             $variables
+     * @param array             $failures
      */
     protected function fetchVariables($response, array &$variables, array &$failures) {
       if(isset($this->source['fetch']) && is_array($this->source['fetch']) && count($this->source['fetch'])) {
-        if($response instanceof Response && $response->isJson()) {
+        if($response instanceof ConnectorResponse && $response->isJson()) {
           $json = $response->getJson();
 
           foreach($this->source['fetch'] as $variable_name => $path) {

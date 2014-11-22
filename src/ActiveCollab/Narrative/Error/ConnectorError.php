@@ -9,8 +9,8 @@
    *
    * @package ActiveCollab\Narrative\Error
    */
-  class ConnectorError extends Error {
-
+  class ConnectorError extends Error
+  {
     /**
      * Construct a message
      *
