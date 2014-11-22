@@ -13,4 +13,5 @@
   $application->add(new Command\StoriesCommand());
   $application->add(new Command\StoryCommand());
   $application->add(new Command\TestCommand());
+  $application->add(new Command\UpdateCommand());
   $application->run();
