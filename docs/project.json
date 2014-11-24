@@ -1,5 +1,5 @@
 {
-    "name": "docs",
+    "name": "Narrative",
     "default_build_theme": "bootstrap",
     "video_groups": {
         "getting-started": "Getting Started"
