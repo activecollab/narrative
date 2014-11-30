@@ -180,12 +180,13 @@
      * @param ConnectorResponse|int $response
      * @param array $passes
      * @param array $failures
+     * @param array $variables
      * @param float|null $request_time
      * @param string $persona
      * @param boolean $is_prep
      * @param boolean $dump_response
      */
-    public function requestTearDown($response, $passes, $failures, $request_time, $persona, $is_prep, $dump_response)
+    public function requestTearDown($response, $passes, $failures, $variables, $request_time, $persona, $is_prep, $dump_response)
     {
       $this->total_requests++;
 
@@ -208,7 +209,7 @@
       $this->total_request_time += $request_time;
 
       if ($this->output_filter['request_details']) {
-        $this->writeRequestMessage($response, $failures, $request_time, $persona, $is_prep, $dump_response);
+        $this->writeRequestMessage($response, $failures, $variables, $request_time, $persona, $is_prep, $dump_response);
       }
 
       $this->current_request = null;
@@ -217,12 +218,13 @@
     /**
      * @param ConnectorResponse|int $response
      * @param array $failures
+     * @param array $variables
      * @param float|null $request_time
      * @param string $persona
      * @param boolean $is_prep
      * @param boolean $dump_response
      */
-    private function writeRequestMessage($response, $failures, $request_time, $persona, $is_prep, $dump_response)
+    private function writeRequestMessage($response, $failures, $variables, $request_time, $persona, $is_prep, $dump_response)
     {
       if(empty($failures)) {
         $color = 'info';
@@ -235,7 +237,7 @@
       $prep = $is_prep ? ' <question>[PREP]</question>' : '';
       $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
 
-      $this->output->writeln("<$color>" . $this->current_request->getMethod() . ' ' . $this->current_request->getPathWithQueryString() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
+      $this->output->writeln("<$color>" . $this->current_request->getMethod() . ' ' . $this->current_request->getPathWithQueryString($variables) . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
 
       // Output failure lines
       if(count($failures)) {

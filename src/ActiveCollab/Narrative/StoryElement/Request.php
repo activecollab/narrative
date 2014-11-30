@@ -62,13 +62,13 @@
 
         switch($this->getMethod()) {
           case self::GET:
-            $response = $connector->get($this->getPathWithQueryString(), $this->executeAs()); break;
+            $response = $connector->get($this->getPathWithQueryString($variables), $this->executeAs()); break;
           case self::POST:
-            $response = $connector->post($this->getPathWithQueryString(), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
+            $response = $connector->post($this->getPathWithQueryString($variables), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
           case self::PUT:
-            $response = $connector->put($this->getPathWithQueryString(), $this->getPayload($variables), null, $this->executeAs()); break;
+            $response = $connector->put($this->getPathWithQueryString($variables), $this->getPayload($variables), null, $this->executeAs()); break;
           case self::DELETE:
-            $response = $connector->delete($this->getPathWithQueryString(), $this->getPayload($variables), $this->executeAs()); break;
+            $response = $connector->delete($this->getPathWithQueryString($variables), $this->getPayload($variables), $this->executeAs()); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
@@ -87,7 +87,7 @@
           $this->validate($response, $variables, $passes, $failures);
           $this->fetchVariables($response, $variables, $failures);
 
-          $test_result->requestTearDown($response, $passes, $failures, $request_time, $this->executeAs(), $this->isPreparation(), $this->dumpResponse());
+          $test_result->requestTearDown($response, $passes, $failures, $variables, $request_time, $this->executeAs(), $this->isPreparation(), $this->dumpResponse());
 
           if(empty($failures) && $this->createPersona()) {
             $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
@@ -586,9 +586,10 @@
     /**
      * Return path with query string attached
      *
+     * @param  array  $variables
      * @return string
      */
-    function getPathWithQueryString()
+    function getPathWithQueryString($variables = null)
     {
       $path = $this->getPath();
 
@@ -604,6 +605,10 @@
             }
 
             $query_string_params[$k] = $v;
+          }
+
+          if ($variables) {
+            $this->applyVariablesToArray($query_string_params, $variables);
           }
 
           $path .= '?' . http_build_query($query_string_params);
