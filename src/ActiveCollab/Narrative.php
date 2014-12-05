@@ -9,7 +9,7 @@
    */
   final class Narrative
   {
-    const VERSION = '0.9.0';
+    const VERSION = '0.9.1';
 
     /**
      * Check if we are in testing mode
