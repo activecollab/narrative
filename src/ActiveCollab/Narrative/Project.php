@@ -2,23 +2,17 @@
 
   namespace ActiveCollab\Narrative;
 
-  use ActiveCollab\Narrative\StoryElement\Request;
-  use ActiveCollab\Narrative\StoryElement\Sleep;
-  use ActiveCollab\SDK\Exception;
-  use ActiveCollab\Narrative\Error\CommandError;
-  use ActiveCollab\Narrative\Error\ParseError;
-  use ActiveCollab\Narrative\Error\ParseJsonError;
-  use Symfony\Component\Console\Output\OutputInterface;
-  use ActiveCollab\Narrative\Connector\Connector;
-  use ActiveCollab\Narrative\Connector\ActiveCollabSdkConnector;
+  use ActiveCollab\Narrative, ActiveCollab\Narrative\Connector\Connector, ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\StoryElement\Sleep, ActiveCollab\Narrative\StoryElement\Text;
+  use ActiveCollab\Narrative\Error\Error, ActiveCollab\Narrative\Error\CommandError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ThemeNotFoundError;
+  use Smarty;
 
   /**
    * Narrative project
    *
    * @package Narrative
    */
-  final class Project {
-
+  final class Project
+  {
     /**
      * @var string
      */
@@ -37,7 +31,7 @@
      * @param string $path
      * @throws |ActiveCollab\Narrative\Error\ParseJsonError
      */
-    function __construct($path) {
+    public function __construct($path) {
       $this->path = $path;
 
       if($this->isValid()) {
@@ -59,8 +53,20 @@
      *
      * @return string
      */
-    function getName() {
+    public function getName() {
       return isset($this->configuration['name']) && $this->configuration['name'] ? $this->configuration['name'] : basename($this->path);
+    }
+
+    /**
+     * Return configuration option
+     *
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getConfigurationOption($name, $default = null)
+    {
+      return isset($this->configuration[$name]) && $this->configuration[$name] ? $this->configuration[$name] : $default;
     }
 
     /**
@@ -68,7 +74,7 @@
      *
      * @return string
      */
-    function getPath() {
+    public function getPath() {
       return $this->path;
     }
 
@@ -82,35 +88,126 @@
     /**
      * @return Connector
      */
-    function &getConnector() {
+    public function &getConnector() {
       if($this->connector === false) {
-        $this->connector = new ActiveCollabSdkConnector([ 'url' => 'http://feather.dev', 'token' => '1-TESTTESTTESTTESTTESTTESTTESTTESTTESTTEST' ]);
+        list ($connector_class, $connector_settings) = $this->getConnectorSettings();
+
+        if ($connector_class) {
+          if (isset($connector_settings['file'])) {
+            require_once $connector_settings['file'];
+          }
+
+          if ((new \ReflectionClass($connector_class))->isSubclassOf('ActiveCollab\Narrative\Connector\Connector')) {
+            $this->connector = new $connector_class($connector_settings);
+          }
+        }
       }
 
       return $this->connector;
     }
 
     /**
+     * Return connector settings
+     *
+     * @return array
+     */
+    private function getConnectorSettings()
+    {
+      $connector = $this->getConfigurationOption('connector');
+
+      if (is_array($connector) && count($connector) === 1) {
+        foreach ($connector as $connector_class => $connector_settings) {
+          return [ $connector_class, $connector_settings ];
+        }
+      }
+
+      return [ null, null ];
+    }
+
+    /**
+     * @var array
+     */
+    private $stories = false;
+
+    /**
      * Return all project stories
      *
      * @return Story[]
      */
-    function getStories() {
-      $result = [];
+    public function getStories() {
+      if ($this->stories === false) {
+        $this->stories = [];
 
-      if(is_dir("$this->path/stories")) {
-        foreach(new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator("$this->path/stories")) as $file) {
+        $story_discoverer = $this->getStoryDiscoverer();
 
-          /**
-           * @var \DirectoryIterator $file
-           */
-          if(substr($file->getBasename(), 0, 1) != '.' && $file->getExtension() == 'narr') {
-            $result[] = new Story($file->getPathname());
-          } // if
-        } // foreach
+        $story_files = $story_discoverer->getStoryFiles("$this->path/stories");
+
+        if (is_array($story_files)) {
+          $this->sortStoryFiles($story_files);
+
+          foreach ($story_files as $story_file) {
+            $this->stories[] = new Story($story_file, "$this->path/stories");
+          }
+        }
       }
 
-      return $result;
+      return $this->stories;
+    }
+
+    /**
+     * @var StoryDiscoverer
+     */
+    private $story_discoverer;
+
+    /**
+     * Return story discoverer instance
+     *
+     * @return StoryDiscoverer
+     */
+    public function getStoryDiscoverer()
+    {
+      if (empty($this->story_discoverer)) {
+        $this->story_discoverer = new StoryDiscoverer();
+      }
+
+      return $this->story_discoverer;
+    }
+
+    /**
+     * Set custom story discoverer
+     *
+     * @param StoryDiscoverer $discoverer
+     * @throws Error
+     */
+    public function setStoryDiscoverer($discoverer)
+    {
+      if ($discoverer instanceof StoryDiscoverer || $discoverer === null) {
+        $this->story_discoverer = $discoverer;
+        $this->stories = false; // Reset stories cache
+      } else {
+        throw new Error('Valid StoryDiscoverer instance or NULL expected');
+      }
+    }
+
+    /**
+     * Sort story files so root stories are above stories organised in groups
+     *
+     * @param array $story_files
+     */
+    private function sortStoryFiles(array &$story_files)
+    {
+      sort($story_files);
+
+      $root_stories = [];
+
+      foreach ($story_files as $k => $story_file) {
+        if (dirname($story_file) === "$this->path/stories") {
+          $root_stories[] = $story_file;
+          unset($story_files[$k]);
+        }
+      }
+
+      $story_files = array_merge($root_stories, $story_files);
     }
 
     /**
@@ -119,9 +216,11 @@
      * @param string $name
      * @return Story|null
      */
-    function getStory($name) {
+    public function getStory($name) {
+      $name = trim($name, '/');
+
       foreach($this->getStories() as $story) {
-        if($story->getName() === $name) {
+        if($story->getFullName() == $name) {
           return $story;
         }
       }
@@ -130,89 +229,175 @@
     }
 
     /**
+     * @return array
+     */
+    public function getRoutes()
+    {
+      return isset($this->configuration['routes']) && is_array($this->configuration['routes']) ? $this->configuration['routes'] : [];
+    }
+
+    /**
+     * Return route names from path
+     *
+     * @param string $path
+     * @return string
+     */
+    public function getRouteNameFromPath($path)
+    {
+      if (isset($this->configuration['routes']) && is_array($this->configuration['routes'])) {
+        $path = trim($path, '/');
+
+        foreach (array_reverse($this->configuration['routes']) as $route_name => $route_settings) {
+          if (preg_match($route_settings['match'], $path)) {
+            return $route_name;
+          }
+        }
+      }
+
+      return '';
+    }
+
+    /**
      * Return true if this is a valid project
      *
      * @return bool
      */
-    function isValid() {
+    public function isValid() {
       return is_dir($this->path) && is_file($this->path . '/project.json');
     }
 
     /**
      * Test a group of stories
      *
-     * @param Story[] $stories
-     * @param OutputInterface $output
+     * @param Story $story
+     * @param TestResult $test_result
      */
-    function testStories(array $stories, OutputInterface &$output) {
-      $total_requests = $failed_requests = $total_assertions = $total_passes = $total_failures = 0;
+    public function testStory(Story $story, TestResult &$test_result)
+    {
+      try {
+        if ($elements = $story->getElements()) {
+          $this->setUp($story, $test_result);
 
-      foreach($stories as $story) {
-        try {
-          if($elements = $story->getElements()) {
-            $this->setUp($output, $story);
+          try {
+            $variables = [];
 
-            try {
-              $output->writeln('');
-
-              $variables = [];
-
-              foreach($elements as $element) {
-                if($element instanceof Request) {
-                  list($response, $passes, $failures) = $element->execute($this, $variables, $output);
-
-                  $total_requests++;
-
-                  if(empty($response) || is_array($failures) && count($failures)) {
-                    $failed_requests ++;
-                  }
-
-                  if(is_array($passes)) {
-                    $total_assertions += count($passes);
-                    $total_passes += count($passes);
-                  }
-
-                  if(is_array($failures)) {
-                    $total_assertions += count($failures);
-                    $total_failures += count($failures);
-                  }
-                } elseif($element instanceof Sleep) {
-                  $element->execute($this, $output);
-                }
+            foreach ($elements as $element) {
+              if ($element instanceof Request) {
+                $element->execute($this, $variables, $test_result);
+              } elseif ($element instanceof Sleep) {
+                $element->execute($this, $test_result);
               }
-            } catch(Exception $e) {
-              $this->tearDown($output); // Make sure that we tear down the environment in case of an error
-              throw $e;
+            }
+          } catch (Narrative\Error\ConnectorError $e) {
+            $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
+            throw $e;
+          }
+
+          $this->tearDown($test_result); // Make sure that we tear down the environment after each request
+        }
+      } catch (ParseError $e) {
+        $test_result->parseError($e);
+      } catch (ParseJsonError $e) {
+        $test_result->parseJsonError($e);
+      } catch (\Exception $e) {
+        $test_result->requestExecutionError($e);
+      }
+    }
+
+    /**
+     * Test a group of stories
+     *
+     * @param Story $story
+     * @param TestResult $test_result
+     * @param Smarty $smarty
+     * @return string
+     */
+    public function testAndRenderStory(Story $story, TestResult &$test_result, Smarty &$smarty)
+    {
+      $result = '';
+
+      try {
+        if ($elements = $story->getElements()) {
+          $this->setUp($story, $test_result);
+
+          try {
+            $variables = [];
+
+            $request_template = $smarty->createTemplate('request.tpl');
+            $request_id = 1;
+
+            foreach ($elements as $element) {
+              if ($element instanceof Request) {
+                if ($element->isPreparation()) {
+                  $element->execute($this, $variables, $test_result);
+                } else {
+                  list($http_code, $content_type, $response) = $element->execute($this, $variables, $test_result);
+
+                  $request_template->assign([
+                    'request' => $element,
+                    'request_id' => $request_id++,
+                    'http_code' => $http_code,
+                    'content_type' => $content_type,
+                    'response' => $response,
+                  ]);
+
+                  $request_template->assignByRef('request_variables', $variables);
+
+                  $result .= $request_template->fetch();
+                }
+              } elseif ($element instanceof Sleep) {
+                $element->execute($this, $test_result);
+
+                $result .= '<div class="sleep">Sleeping for ' . $element->howLong() . ' seconds</div>';
+              } elseif ($element instanceof Text) {
+                $result .= $this->renderText($story, $element, $smarty);
+              }
             }
 
-            $this->tearDown($output); // Make sure that we tear down the environment after each request
+            if (count($personas = $this->getConnector()->getPersonas()) > 1) {
+              $persona_names = [];
+
+              foreach ($personas as $persona => $persona_settings) {
+                if ($persona === Connector::DEFAULT_PERSONA) {
+                  continue;
+                }
+                $persona_names[] = $persona;
+              }
+
+              $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '.</p>' . $result;
+            }
+          } catch (Narrative\Error\ConnectorError $e) {
+            $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
+            throw $e;
           }
-        } catch(ParseError $e) {
-          $output->writeln($e->getMessage());
-        } catch(ParseJsonError $e) {
-          $output->writeln($e->getMessage());
-          $output->writeln($e->getJson());
-        } catch(\Exception $e) {
-          $output->writeln($e->getMessage());
+
+          $this->tearDown($test_result); // Make sure that we tear down the environment after each request
         }
+      } catch (ParseError $e) {
+        $test_result->parseError($e);
+      } catch (ParseJsonError $e) {
+        $test_result->parseJsonError($e);
+      } catch (\Exception $e) {
+        $test_result->requestExecutionError($e);
       }
 
-      $output->writeln('');
+      return $result;
+    }
 
-      if($failed_requests) {
-        $stats = "Requests: {$total_requests}. <error>Failures: {$failed_requests}</error>. ";
+    /**
+     * @param Story $story
+     * @param Text $element
+     * @param Smarty $smarty
+     * @return string
+     */
+    private function renderText(Story &$story, Text $element, Smarty &$smarty)
+    {
+      if (strpos($element->getSource(), '<{') === false) {
+        return Narrative::markdownToHtml($element->getSource());
       } else {
-        $stats = "Requests: {$total_requests}. Failures: {$failed_requests}. ";
+        return Narrative::markdownToHtml($smarty->createTemplate('eval:' . $element->getSource())->fetch());
       }
-
-      if($total_failures) {
-        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. <error>Failures: {$total_failures}</error>.";
-      } else {
-        $stats .= "Assertions: {$total_assertions}. Passes: {$total_passes}. Failures: {$total_failures}.";
-      }
-
-      $output->writeln($stats);
-    } // testStories
+    }
 
     // ---------------------------------------------------
     //  Set up and tear down
@@ -221,15 +406,11 @@
     /**
      * Set up the environment before each story
      *
-     * @param OutputInterface $output
-     * @param Story|null
+     * @param Story $story
+     * @param TestResult $test_result
      */
-    function setUp(OutputInterface $output, $story = null) {
-      if($story instanceof Story) {
-        $output->writeln('Setting up the test environment for "' . $story->getName() . '" story');
-      } else {
-        $output->writeln('Setting up the test environment');
-      }
+    public function setUp(Story $story, TestResult &$test_result) {
+      $test_result->storySetUp($story);
 
       if(isset($this->configuration['set_up']) && is_array($this->configuration['set_up'])) {
         foreach($this->configuration['set_up'] as $command) {
@@ -241,10 +422,12 @@
     /**
      * Tear down before each story
      *
-     * @param OutputInterface $output
+     * @param TestResult $test_result
      */
-    function tearDown(OutputInterface $output) {
-      $output->writeln('Tearing down the test environment');
+    public function tearDown(TestResult &$test_result) {
+      $test_result->storyTearDown();
+
+      $this->getConnector()->forgetNonDefaultPersonas();
 
       if(isset($this->configuration['tear_down']) && is_array($this->configuration['tear_down'])) {
         foreach($this->configuration['tear_down'] as $command) {
@@ -258,7 +441,7 @@
      *
      * @param mixed $c
      * @return string
-     * @throws Error\CommandError
+     * @throws CommandError
      */
     private function executeCommand($c) {
       $original_working_dir = getcwd();
@@ -284,4 +467,110 @@
       return $result;
     }
 
+    /**
+     * Return major API version number
+     *
+     * @return int
+     */
+    public function getApiVersion()
+    {
+      return (integer) $this->getConfigurationOption('api_version', 1);
+    }
+
+    /**
+     * Return temp path
+     *
+     * @return string
+     */
+    public function getTempPath()
+    {
+      return $this->path . '/temp';
+    }
+
+    /**
+     * @var string
+     */
+    private $default_build_target;
+
+    /**
+     * Return default build target
+     *
+     * @return string|null
+     */
+    function getDefaultBuildTarget()
+    {
+      if (empty($this->default_build_target)) {
+        $this->default_build_target = $this->getConfigurationOption('default_build_target');
+
+        if (empty($this->default_build_target)) {
+          $this->default_build_target = "$this->path/build";
+        }
+      }
+
+      return $this->default_build_target;
+    }
+
+    /**
+     * Return build theme
+     *
+     * @param string|null $name
+     * @return Theme
+     * @throws ThemeNotFoundError
+     */
+    function getBuildTheme($name = null)
+    {
+      if ($name) {
+        $theme_path = __DIR__ . "/Themes/$name"; // Input
+      } elseif (is_dir($this->getPath() . '/theme')) {
+        $theme_path = $this->getPath() . '/theme'; // Project specific theme
+      } else {
+        $theme_path = __DIR__ . "/Themes/" . $this->getDefaultBuildTheme(); // Default built in theme
+      }
+
+      if ($theme_path && is_dir($theme_path)) {
+        return new Theme($theme_path);
+      } else {
+        throw new ThemeNotFoundError($name, $theme_path);
+      }
+    }
+
+    /**
+     * Return name of the default build theme
+     *
+     * @return string
+     */
+    function getDefaultBuildTheme()
+    {
+      return $this->getConfigurationOption('default_build_theme', 'bootstrap');
+    }
+
+    /**
+     * @var array
+     */
+    private $social_links = false;
+
+    /**
+     * @return array
+     */
+    function getSocialLinks()
+    {
+      if ($this->social_links === false) {
+        $this->social_links = [];
+
+        if (is_array($this->getConfigurationOption('social_links'))) {
+          foreach ($this->getConfigurationOption('social_links') as $service => $handle) {
+            switch ($service) {
+              case 'twitter':
+                $this->social_links[$service] = [ 'name' => 'Twitter', 'url' => "https://twitter.com/{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+              case 'facebook':
+                $this->social_links[$service] = [ 'name' => 'Facebook', 'url' => "https://www.facebook.com/{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+              case 'google':
+                $this->social_links[$service] = [ 'name' => 'Google+', 'url' => "https://plus.google.com/+{$handle}", 'icon' => "images/icon_{$service}.png" ]; break;
+            }
+          }
+        }
+      }
+
+      return $this->social_links;
+    }
   }

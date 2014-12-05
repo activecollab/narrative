@@ -3,15 +3,14 @@
   namespace ActiveCollab\Narrative\Connector;
 
   use ActiveCollab\Narrative\Error\ConnectorError;
-  use ActiveCollab\SDK\Response;
 
   /**
    * Basic connector
    *
    * @package ActiveCollab\Narrative\Connector
    */
-  abstract class Connector {
-
+  abstract class Connector
+  {
     const DEFAULT_PERSONA = 'default';
 
     /**
@@ -20,7 +19,7 @@
      * @param string $path
      * @param string|null $persona
      */
-    abstract function get($path, $persona = Connector::DEFAULT_PERSONA);
+    abstract public function get($path, $persona = Connector::DEFAULT_PERSONA);
 
     /**
      * Send a POST request
@@ -30,7 +29,7 @@
      * @param array|null $attachments
      * @param string|null $persona
      */
-    abstract function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA);
+    abstract public function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA);
 
     /**
      * Send a PUT request
@@ -40,7 +39,7 @@
      * @param array|null $attachments
      * @param string|null $persona
      */
-    abstract function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA);
+    abstract public function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA);
 
     /**
      * Send a delete command
@@ -49,12 +48,22 @@
      * @param array|null $params
      * @param string|null $persona
      */
-    abstract function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA);
+    abstract public function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA);
 
     /**
      * @var array
      */
     private $personas = [];
+
+    /**
+     * Return personas
+     *
+     * @return array
+     */
+    public function getPersonas()
+    {
+      return $this->personas;
+    }
 
     /**
      * Return a specific persona settings
@@ -63,7 +72,7 @@
      * @return array
      * @throws \ActiveCollab\Narrative\Error\ConnectorError
      */
-    function getPersona($name = Connector::DEFAULT_PERSONA) {
+    public function getPersona($name = Connector::DEFAULT_PERSONA) {
       if(isset($this->personas[$name])) {
         return $this->personas[$name];
       } else {
@@ -75,7 +84,7 @@
      * @param string $name
      * @param array $params
      */
-    function addPersona($name, array $params = []) {
+    public function addPersona($name, array $params = []) {
       $this->personas[$name] = (array) $params;
     }
 
@@ -85,6 +94,17 @@
      * @param string $name
      * @param mixed $response
      */
-    abstract function addPersonaFromResponse($name, $response);
+    abstract public function addPersonaFromResponse($name, $response);
 
+    /**
+     * Forget non-default personas
+     */
+    public function forgetNonDefaultPersonas()
+    {
+      foreach ($this->personas as $k => $v) {
+        if ($k !== self::DEFAULT_PERSONA) {
+          unset($this->personas[$k]);
+        }
+      }
+    }
   }

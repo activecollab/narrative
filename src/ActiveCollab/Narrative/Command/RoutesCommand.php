@@ -6,18 +6,18 @@
   use Symfony\Component\Console\Command\Command, Symfony\Component\Console\Input\InputInterface, Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table;
 
   /**
-   * List stories command
+   * List routes command
    *
    * @package Narrative\Command
    */
-  class StoriesCommand extends Command
+  class RoutesCommand extends Command
   {
     /**
      * Configure command
      */
     protected function configure()
     {
-      $this->setName('stories')->setDescription('List stories in project');
+      $this->setName('routes')->setDescription('List routes in project');
     }
 
     /**
@@ -32,23 +32,21 @@
       $project = new Project(getcwd());
 
       if($project->isValid()) {
-        $stories = $project->getStories();
+        $routes = $project->getRoutes();
 
-        if (count($stories)) {
+        if ($routes) {
           $table = new Table($output);
-          $table->setHeaders([ 'Name', 'Group' ]);
-
-          foreach($stories as $story) {
-            $table->addRow([ $story->getName(), implode(' / ', $story->getGroups()) ]);
+          $table->setHeaders([ 'Route', 'Methods' ]);
+          foreach ($routes as $route => $route_details) {
+            $table->addRow([ $route, (isset($route_details['methods']) && count($route_details['methods']) ? implode(', ', $route_details['methods']) : '') ]);
           }
-
           $table->render();
         }
 
-        if(count($stories) === 1) {
-          $output->writeln('1 story found');
+        if(count($routes) === 1) {
+          $output->writeln('1 route found');
         } else {
-          $output->writeln(count($stories) . ' stories found');
+          $output->writeln(count($routes) . ' route found');
         }
       } else {
         $output->writeln($project->getPath() . ' is not a valid Narrative project');

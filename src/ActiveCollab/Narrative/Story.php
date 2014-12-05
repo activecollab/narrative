@@ -1,5 +1,4 @@
 <?php
-
   namespace ActiveCollab\Narrative;
 
   use ActiveCollab\Narrative\StoryElement\Sleep;
@@ -8,8 +7,8 @@
   use ActiveCollab\Narrative\StoryElement\Request;
   use ActiveCollab\Narrative\Error\ParseError;
 
-  final class Story {
-
+  final class Story
+  {
     /**
      * Story defintion path
      *
@@ -18,12 +17,62 @@
     private $path;
 
     /**
+     * @var string
+     */
+    private $name;
+
+    /**
+     * @var array
+     */
+    private $groups = [];
+
+    /**
      * Construct the story instance
      *
-     * @param $path
+     * @param string $story_path
+     * @param string $stories_path
      */
-    function __construct($path) {
-      $this->path = $path;
+    function __construct($story_path, $stories_path) {
+      if (DIRECTORY_SEPARATOR === '\\') {
+        $story_path = str_replace('\\', '/', $story_path);
+        $stories_path = str_replace('\\', '/', $stories_path);
+      }
+
+      $this->path = $story_path;
+      $this->name = $this->getNameFromPath();
+      $this->groups = $this->getGroupsFromPath($stories_path);
+    }
+
+    /**
+     * Get story name from story path
+     *
+     * @return string
+     */
+    private function getNameFromPath()
+    {
+      $basename = basename($this->path);
+
+      if (substr_count($basename, '.') == 2) {
+        $first_dot = strpos($basename, '.');
+        $second_dot = strpos($basename, '.', $first_dot + 1);
+
+        return trim(substr($basename, $first_dot + 1, $second_dot - $first_dot - 1));
+      } else {
+        return basename($this->path, '.narr');
+      }
+    }
+
+    /**
+     * Return groups from path
+     *
+     * @param string $stories_path
+     * @return array
+     */
+    private function getGroupsFromPath($stories_path)
+    {
+      $groups = trim(substr(dirname($this->path), strlen($stories_path)), '/');
+
+      return $groups ? explode('/', $groups) : [];
     }
 
     /**
@@ -41,7 +90,40 @@
      * @return string
      */
     function getName() {
-      return basename($this->path, '.narr');
+      return $this->name;
+    }
+
+    /**
+     * @var string
+     */
+    private $full_name = false;
+
+    /**
+     * Return full story name /In/This/Group/Story
+     *
+     * @return string
+     */
+    function getFullName()
+    {
+      if ($this->full_name === false) {
+        if (count($this->getGroups())) {
+          $this->full_name = implode('/', $this->getGroups()) . '/' . $this->getName();
+        } else {
+          $this->full_name = $this->getName();
+        }
+      }
+
+      return $this->full_name;
+    }
+
+    /**
+     * Return story groups
+     *
+     * @return array
+     */
+    public function getGroups()
+    {
+      return $this->groups;
     }
 
     /**
@@ -123,5 +205,4 @@
 
       return $result;
     }
-
   }

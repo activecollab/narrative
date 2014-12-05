@@ -2,12 +2,11 @@
 
   namespace ActiveCollab\Narrative\StoryElement;
 
+  use ActiveCollab\Narrative\ConnectorResponse;
   use ActiveCollab\Narrative\Project, ActiveCollab\Narrative\Connector\Connector;
   use ActiveCollab\Narrative\Error\NoValidatorError, ActiveCollab\Narrative\Error\ValidatorParamsError, ActiveCollab\Narrative\Error\ParseJsonError, ActiveCollab\Narrative\Error\RequestMethodError;
-  use ActiveCollab\SDK\Response;
-  use Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table;
+  use ActiveCollab\Narrative\TestResult;
   use Peekmo\JsonPath\JsonStore;
-  use League\Csv\Reader;
 
   /**
    * HTTP request element
@@ -50,128 +49,63 @@
      *
      * @param Project $project
      * @param array $variables
-     * @param OutputInterface $output
+     * @param TestResult $test_result
      * @return array
      */
-    function execute(Project $project, &$variables, $output) {
+    function execute(Project $project, &$variables, TestResult &$test_result) {
+      $test_result->requestSetUp($this);
+
       $connector = $project->getConnector();
 
-      $response = $request_time = null;
-
       try {
+        $request_time = null;
+
         switch($this->getMethod()) {
           case self::GET:
-            $response = $connector->get($this->getPathWithQueryString(), $this->executeAs()); break;
+            $response = $connector->get($this->getPathWithQueryString($variables), $this->executeAs()); break;
           case self::POST:
-            $response = $connector->post($this->getPathWithQueryString(), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
+            $response = $connector->post($this->getPathWithQueryString($variables), $this->getPayload($variables), $this->getAttachments($project->getPath()), $this->executeAs()); break;
           case self::PUT:
-            $response = $connector->put($this->getPathWithQueryString(), $this->getPayload($variables), null, $this->executeAs()); break;
+            $response = $connector->put($this->getPathWithQueryString($variables), $this->getPayload($variables), null, $this->executeAs()); break;
           case self::DELETE:
-            $response = $connector->delete($this->getPathWithQueryString(), $this->getPayload($variables), $this->executeAs()); break;
+            $response = $connector->delete($this->getPathWithQueryString($variables), $this->getPayload($variables), $this->executeAs()); break;
           default:
             throw new RequestMethodError($this->getMethod());
         }
-      } catch(\Exception $e) {
-        $output->writeln('<error>Failed to execute ' . $this->getPath() . '. Reason: ' . $e->getMessage() . '</error>');
 
-        if(method_exists($e, 'getServerResponse')) {
-          print_r($e->getServerResponse());
-        }
-      }
+        if($response) {
+          $passes = $failures = [];
 
-      if($response) {
-        $passes = $failures = [];
-
-        if($response instanceof Response && $response->getHttpCode() === 500) {
-          if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
-            // If dump_response is explicitly set to FALSE, don't turn it on
-          } else {
-            $this->source['dump_response'] = true;
-          }
-        }
-
-        $this->validate($response, $variables, $passes, $failures);
-        $this->fetchVariables($response, $variables, $failures);
-        $this->printRequestStatusLine($response, $passes, $failures, $request_time, $this->executeAs(), $output);
-
-        if(empty($failures) && $this->createPersona()) {
-          $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
-
-          if($token) {
-            $output->writeln("<comment>Info: Persona '" . $this->createPersona() . "' has been created (access token '{$token}')</comment>");
-          }
-        }
-
-        return [ $response, $passes, $failures ];
-      } else {
-        return [ null, null, null ];
-      }
-    }
-
-    /**
-     * Output status message
-     *
-     * @param Response|int $response
-     * @param array $passes
-     * @param array $failures
-     * @param float|null $request_time
-     * @param string $persona
-     * @param OutputInterface $output
-     */
-    private function printRequestStatusLine($response, $passes, $failures, $request_time, $persona, OutputInterface $output) {
-      if(empty($failures)) {
-        $color = 'info';
-      } else {
-        $color = 'error';
-        $output->writeln('');
-      }
-
-      $http_code = $response instanceof Response ? $response->getHttpCode() : (integer) $response;
-      $request_time = $response instanceof Response ? $response->getTotalTime() : (float) $request_time;
-      $prep = $this->isPreparation() ? ' <question>[PREP]</question>' : '';
-      $as = $persona != Connector::DEFAULT_PERSONA ? ' <question>[AS ' . $persona .']</question>' : '';
-
-      $output->writeln("<$color>" . $this->getMethod() . ' ' . $this->getPathWithQueryString() . " - {$http_code} in {$request_time} seconds</$color>{$prep}{$as}");
-
-      // Output failure lines
-      if(count($failures)) {
-        foreach($failures as $failure) {
-          $output->writeln('<error>- ' . $failure . '</error>');
-        }
-        $output->writeln('');
-      }
-
-      // Output response, if needed
-      if($this->dumpResponse() && $response instanceof Response) {
-
-        // JSON
-        if($response->isJson()) {
-          ob_start();
-          print_r($response->getJson());
-          $output->write(ob_get_clean());
-
-        // CSV
-        } elseif ($response->getContentType() == 'text/csv') {
-          $table = new Table($output);
-
-          $header_rendered = false;
-
-          foreach (Reader::createFromString(trim($response->getBody()))->fetchAll() as $row) {
-            if ($header_rendered) {
-              $table->addRow($row);
+          if($response instanceof ConnectorResponse && $response->getHttpCode() === 500) {
+            if(isset($this->source['dump_response']) && $this->source['dump_response'] === false) {
+              // If dump_response is explicitly set to FALSE, don't turn it on
             } else {
-              $table->setHeaders($row);
-              $header_rendered = true;
+              $this->source['dump_response'] = true;
             }
           }
 
-          $table->render();
+          $this->validate($response, $variables, $passes, $failures);
+          $this->fetchVariables($response, $variables, $failures);
 
-        // Plain text
+          $test_result->requestTearDown($response, $passes, $failures, $variables, $request_time, $this->executeAs(), $this->isPreparation(), $this->dumpResponse());
+
+          if(empty($failures) && $this->createPersona()) {
+            $token = $connector->addPersonaFromResponse($this->createPersona(), $response);
+
+            if($token) {
+              $test_result->personaCreated($this->createPersona(), $token);
+            }
+          }
+
+          return $response instanceof ConnectorResponse ? [ $response->getHttpCode(), $response->getContentType(), $response->getBody() ] : [ 200, 'text/html', '' ];
         } else {
-          $output->writeln($response->getBody());
+          $test_result->requestFailure();
         }
+      } catch(\Exception $e) {
+        $test_result->requestFailure($e);
       }
+
+      return [ 500, 'text/html', '' ];
     }
 
     // ---------------------------------------------------
@@ -181,10 +115,10 @@
     /**
      * Validate response
      *
-     * @param Response|int $response
-     * @param array        $variables
-     * @param array        $passes
-     * @param array        $failures
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @return boolean
      */
     private function validate(&$response, array &$variables, array &$passes, array &$failures) {
@@ -200,12 +134,12 @@
     /**
      * Return validator method name
      *
-     * @param string       $validator
-     * @param mixed        $validator_data
-     * @param Response|int $response
-     * @param array        $variables
-     * @param array        $passes
-     * @param array        $failures
+     * @param string                $validator
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @throws \ActiveCollab\Narrative\Error\NoValidatorError
      */
     private function callValidator($validator, $validator_data, &$response, array &$variables, array &$passes, array &$failures) {
@@ -223,14 +157,14 @@
     /**
      * Validate if we got proper HTTP status code
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateHttpCode($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         $code = $response->getHttpCode();
       } elseif(is_int($response)) {
         $code = $response;
@@ -248,14 +182,14 @@
     /**
      * Validate if we got proper content type
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateContentType($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         if($response->getContentType() == $validator_data) {
           $passes[] = "Got " . $response->getContentType();
         } else {
@@ -269,14 +203,14 @@
     /**
      * Validate if we got proper content length
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateContentLength($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response) {
+      if($response instanceof ConnectorResponse) {
         if($response->getContentLength() == $validator_data) {
           $passes[] = "Content length is " . $response->getContentLength();
         } else {
@@ -290,14 +224,14 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateIsJson($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         $passes[] = 'Response is JSON';
       } else {
         $failures[] = 'Response is not JSON';
@@ -307,14 +241,14 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      */
     protected function validateJsonCountElements($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         $json = $response->getJson();
 
         if(is_array($json)) {
@@ -336,15 +270,15 @@
     /**
      * Validate if we response is JSON response
      *
-     * @param mixed $validator_data
-     * @param Response|int $response
-     * @param array $variables
-     * @param array $passes
-     * @param array $failures
+     * @param mixed                 $validator_data
+     * @param ConnectorResponse|int $response
+     * @param array                 $variables
+     * @param array                 $passes
+     * @param array                 $failures
      * @throws \ActiveCollab\Narrative\Error\ValidatorParamsError
      */
     protected function validateJsonPath($validator_data, &$response, array &$variables, array &$passes, array &$failures) {
-      if($response instanceof Response && $response->isJson()) {
+      if($response instanceof ConnectorResponse && $response->isJson()) {
         if(is_array($validator_data)) {
           $json = $response->getJson(); // Fetch JSON only when we have an array of checkers
 
@@ -558,13 +492,13 @@
     /**
      * Update list of variables collected by the story
      *
-     * @param Response $response
-     * @param array $variables
-     * @param array $failures
+     * @param ConnectorResponse $response
+     * @param array             $variables
+     * @param array             $failures
      */
     protected function fetchVariables($response, array &$variables, array &$failures) {
       if(isset($this->source['fetch']) && is_array($this->source['fetch']) && count($this->source['fetch'])) {
-        if($response instanceof Response && $response->isJson()) {
+        if($response instanceof ConnectorResponse && $response->isJson()) {
           $json = $response->getJson();
 
           foreach($this->source['fetch'] as $variable_name => $path) {
@@ -652,9 +586,10 @@
     /**
      * Return path with query string attached
      *
+     * @param  array  $variables
      * @return string
      */
-    function getPathWithQueryString()
+    function getPathWithQueryString($variables = null)
     {
       $path = $this->getPath();
 
@@ -672,11 +607,25 @@
             $query_string_params[$k] = $v;
           }
 
+          if ($variables) {
+            $this->applyVariablesToArray($query_string_params, $variables);
+          }
+
           $path .= '?' . http_build_query($query_string_params);
         }
       }
 
       return $path;
+    }
+
+    /**
+     * Return query parameters
+     *
+     * @return array
+     */
+    function getQuery()
+    {
+      return isset($this->source['query']) && is_array($this->source['query']) ? $this->source['query'] : [];
     }
 
     /**
@@ -718,6 +667,16 @@
     }
 
     /**
+     * Return request files (if any)
+     *
+     * @return array
+     */
+    public function getFiles()
+    {
+      return isset($this->source['files']) && is_array($this->source['files']) ? $this->source['files'] : [];
+    }
+
+    /**
      * Return array of files that need to be uploaded with this request
      *
      * @param string $project_path
@@ -726,20 +685,18 @@
     function getAttachments($project_path) {
       $result = [];
 
-      if(isset($this->source['files']) && is_array($this->source['files'])) {
-        foreach($this->source['files'] as $file) {
-          if(is_array($file)) {
-            list($filename, $mime_type) = $file;
-          } else {
-            $filename = $file;
-            $mime_type = 'application/octet-stream';
-          }
+      foreach($this->getFiles() as $file) {
+        if(is_array($file)) {
+          list($filename, $mime_type) = $file;
+        } else {
+          $filename = $file;
+          $mime_type = 'application/octet-stream';
+        }
 
-          $path = $project_path . '/files/' . $filename;
+        $path = $project_path . '/files/' . $filename;
 
-          if(is_file($path) && is_readable($path)) {
-            $result[] = [ $path, $mime_type ];
-          }
+        if(is_file($path) && is_readable($path)) {
+          $result[] = [ $path, $mime_type ];
         }
       }
 
@@ -771,6 +728,16 @@
      */
     function executeAs() {
       return isset($this->source['as']) && $this->source['as'] ? $this->source['as'] : Connector::DEFAULT_PERSONA;
+    }
+
+    /**
+     * Return true if this request should be executed as default persona
+     *
+     * @return bool
+     */
+    function executeAsDefaultPersona()
+    {
+      return isset($this->source['as']) && $this->source['as'] ? $this->source['as'] === Connector::DEFAULT_PERSONA : true;
     }
 
     /**

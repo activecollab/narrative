@@ -19,7 +19,7 @@
      */
     protected function configure()
     {
-      $this->setName('init')->setDescription('Initialize a new Narrative project');
+      $this->setName('init')->setDescription('Initialize a new project');
     }
 
     /**
@@ -36,7 +36,11 @@
       if($project->isValid()) {
         $output->writeln('Project already initialized');
       } else {
-
+        // Write project.json
+        // Create /build folder
+        // Create /files folder
+        // Create /stories folder
+        // Create /temp folder
       }
     }
   }
