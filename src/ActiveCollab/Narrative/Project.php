@@ -279,7 +279,7 @@
           $this->setUp($story, $test_result);
 
           try {
-            $variables = [];
+            $variables = $this->getDefaultVariables();
 
             foreach ($elements as $element) {
               if ($element instanceof Request) {
@@ -321,7 +321,7 @@
           $this->setUp($story, $test_result);
 
           try {
-            $variables = [];
+            $variables = $this->getDefaultVariables();
 
             $request_template = $smarty->createTemplate('request.tpl');
             $request_id = 1;
@@ -397,6 +397,21 @@
       } else {
         return Narrative::markdownToHtml($smarty->createTemplate('eval:' . $element->getSource())->fetch());
       }
+    }
+
+    /**
+     * Return variables that are available by default in stories
+     *
+     * @return array
+     */
+    private function getDefaultVariables()
+    {
+      date_default_timezone_set('UTC');
+
+      return [
+        'now' => date('Y-m-d H:i:s'),
+        'today' => date('Y-m-d'),
+      ];
     }
 
     // ---------------------------------------------------
