@@ -410,7 +410,11 @@
 
       return [
         'now' => date('Y-m-d H:i:s'),
+        'now_timestamp' => time(),
         'today' => date('Y-m-d'),
+        'today_timestamp' => strtotime(date('Y-m-d')),
+        'tomorrow' => date('Y-m-d', strtotime('+1 day')),
+        'tomorrow_timestamp' => strtotime(date('Y-m-d', strtotime('+1 day'))),
       ];
     }
 

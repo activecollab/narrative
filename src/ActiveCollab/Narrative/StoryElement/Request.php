@@ -393,6 +393,45 @@
 
                   break;
 
+                case 'contains':
+                  if(is_string($fetch)) {
+                    if(mb_strpos($fetch, $compare_data) !== false) {
+                      $passes[] = "Value at '{$path}' contains " . $this->verboseVariableValue($compare_data);
+                    } else {
+                      $failures[] = "Value at '{$path}' does not contain " . $this->verboseVariableValue($compare_data);
+                    }
+                  } else {
+                    $failures[] = "Value at '{$path}' is not a string";
+                  }
+
+                  break;
+
+                case 'starts_with':
+                  if(is_string($fetch)) {
+                    if(mb_substr($fetch, 0, mb_strlen($compare_data)) == $compare_data) {
+                      $passes[] = "Value at '{$path}' starts with " . $this->verboseVariableValue($compare_data);
+                    } else {
+                      $failures[] = "Value at '{$path}' does not start with " . $this->verboseVariableValue($compare_data);
+                    }
+                  } else {
+                    $failures[] = "Value at '{$path}' is not a string";
+                  }
+
+                  break;
+
+                case 'ends_with':
+                  if(is_string($fetch)) {
+                    if(mb_substr($fetch, mb_strlen($fetch) - mb_strlen($compare_data)) == $compare_data) {
+                      $passes[] = "Value at '{$path}' ends with " . $this->verboseVariableValue($compare_data);
+                    } else {
+                      $failures[] = "Value at '{$path}' does not end with " . $this->verboseVariableValue($compare_data);
+                    }
+                  } else {
+                    $failures[] = "Value at at '{$path}' is not a string";
+                  }
+
+                  break;
+
                 // Check if value is an array
                 case 'is_array':
                   if(is_array($fetch)) {
