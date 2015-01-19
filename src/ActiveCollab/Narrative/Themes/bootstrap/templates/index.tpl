@@ -16,6 +16,5 @@
     </article>
   </div>
 </div>
-</div>
 
 <{include "footer.tpl"}>

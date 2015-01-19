@@ -268,15 +268,15 @@
     public static function function_page($params, &$smarty)
     {
       if (isset($params['name']) && $params['name']) {
-        $story_path = self::$current_project->getPath() . '/pages/' . $params['name'] . '.md';
+        $page_path = self::$current_project->getPath() . '/pages/' . $params['name'] . '.md';
 
-        if (is_file($story_path)) {
-          $content = file_get_contents($story_path);
+        if (is_file($page_path)) {
+          $content = file_get_contents($page_path);
 
           if (strpos($content, '<{') === false) {
             return Narrative::markdownToHtml($content);
           } else {
-            return Narrative::markdownToHtml($smarty->fetch('eval:' . $content));
+            return Narrative::markdownToHtml($smarty->fetch('file:' . $page_path));
           }
         }
 
