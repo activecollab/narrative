@@ -74,8 +74,10 @@
 
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav">
+          <!--
           <li<{if $current_section == 'stories'}> class="active"<{/if}>><a href="<{navigation_link section=stories page_level=$current_story|story_level}>">Stories</a></li>
           <li<{if $current_section == 'routes'}> class="active"<{/if}>><a href="<{navigation_link section=routes page_level=$current_story|story_level}>">Routes</a></li>
+          -->
         </ul>
       </div>
     </div>
