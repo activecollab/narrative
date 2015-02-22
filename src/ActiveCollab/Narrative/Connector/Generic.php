@@ -3,6 +3,7 @@
   namespace ActiveCollab\Narrative\Connector;
 
   use ActiveCollab\Narrative\Error\ConnectorError, ActiveCollab\Narrative\ConnectorResponse, Guzzle\Http\Client, \Exception;
+  use Guzzle\Http\Exception\ServerErrorResponseException;
   use Guzzle\Http\Message\Response;
 
   /**
@@ -10,7 +11,7 @@
    *
    * @package ActiveCollab\Narrative\Connector
    */
-  final class Generic extends Connector
+  class Generic extends Connector
   {
     /**
      * @var Client
@@ -58,9 +59,18 @@
     function post($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
     {
       try {
-        return $this->sdkResponseToConnectorResponse(Api::post($path, $params, $attachments));
+        if ($params !== null) {
+          $params = json_encode($params);
+        }
+
+        $request = $this->client->post($path, [], $params);
+        $request->setHeader('Content-Type', 'application/json');
+
+        return $this->clientResponseToConnectorResponse($request->send());
+      } catch (ServerErrorResponseException $e) {
+        return $this->clientResponseToConnectorResponse($e->getResponse());
       } catch (Exception $e) {
-        throw new ConnectorError();
+        throw new ConnectorError('Connector error: ' . $e->getMessage());
       }
     }
 
@@ -77,9 +87,18 @@
     function put($path, $params = null, $attachments = null, $persona = Connector::DEFAULT_PERSONA)
     {
       try {
-        return $this->sdkResponseToConnectorResponse(API::put($path, $params, $attachments));
+        if ($params !== null) {
+          $params = json_encode($params);
+        }
+
+        $request = $this->client->put($path, [], $params);
+        $request->setHeader('Content-Type', 'application/json');
+
+        return $this->clientResponseToConnectorResponse($request->send());
+      } catch (ServerErrorResponseException $e) {
+        return $this->clientResponseToConnectorResponse($e->getResponse());
       } catch (Exception $e) {
-        throw new ConnectorError();
+        throw new ConnectorError('Connector error: ' . $e->getMessage());
       }
     }
 
@@ -95,9 +114,14 @@
     function delete($path, $params = null, $persona = Connector::DEFAULT_PERSONA)
     {
       try {
-        return $this->sdkResponseToConnectorResponse(API::delete($path, $params));
+        $request = $this->client->delete($path);
+        $request->setHeader('Content-Type', 'application/json');
+
+        return $this->clientResponseToConnectorResponse($request->send());
+      } catch (ServerErrorResponseException $e) {
+        return $this->clientResponseToConnectorResponse($e->getResponse());
       } catch (Exception $e) {
-        throw new ConnectorError();
+        throw new ConnectorError('Connector error: ' . $e->getMessage());
       }
     }
 
@@ -111,7 +135,7 @@
         return new ConnectorResponse($response->getStatusCode(), $response->getHeader('content-type'), $response->getHeader('content-length'), $response->getBody(), $response->getInfo('total_time'));
       }
 
-      return $_REQUEST;
+      return $response;
     }
 
     /**
@@ -124,6 +148,6 @@
      */
     function addPersonaFromResponse($name, $response)
     {
-      throw new ConnectorError('Persona creation not supported');
+      throw new ConnectorError('Persona creation not supported in generic connector');
     }
   }
