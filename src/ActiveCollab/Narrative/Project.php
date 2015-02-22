@@ -121,7 +121,7 @@
         }
       }
 
-      return [ null, null ];
+      return [ '\\ActiveCollab\\Narrative\\Connector\\Generic', null ];
     }
 
     /**

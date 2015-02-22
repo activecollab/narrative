@@ -3,6 +3,7 @@
   namespace ActiveCollab\Narrative\Connector;
 
   use ActiveCollab\Narrative\Error\ConnectorError, ActiveCollab\Narrative\ConnectorResponse, Guzzle\Http\Client, \Exception;
+  use Guzzle\Http\Message\Response;
 
   /**
    * Generic connector that makes HTTP requests
@@ -16,21 +17,15 @@
      */
     private $client;
 
-    private $url = 'http://localhost:8000/index.php';
-
     /**
      * Construct and configure the connector
      *
      * @param array $parameters
      * @throws ConnectorError
      */
-    function __construct(array $parameters)
+    function __construct(array $parameters = null)
     {
-      if (isset($parameters['url']) && $parameters['url']) {
-        $this->url = $parameters['url'];
-      }
-
-      $this->client = new Client();
+      $this->client = new Client($parameters['url'] && $parameters['url'] ? $parameters['url'] : 'http://localhost:8000/index.php');
     }
 
     /**
@@ -44,11 +39,7 @@
     function get($path, $persona = Connector::DEFAULT_PERSONA)
     {
       try {
-        if (substr($path, 0, 1) == '/') {
-          $path = substr($path, 1);
-        }
-
-        return $this->client->get("{$this->url}/{$path}");
+        return $this->clientResponseToConnectorResponse($this->client->get($path)->send());
       } catch (Exception $e) {
         throw new ConnectorError();
       }
@@ -111,16 +102,16 @@
     }
 
     /**
-     * @param  $sdk_response
+     * @param  Response          $response
      * @return ConnectorResponse
      */
-    private function clientResponseToConnectorResponse($sdk_response)
+    private function clientResponseToConnectorResponse(Response $response)
     {
-      if ($sdk_response instanceof SdkResponse) {
-        return new ConnectorResponse($sdk_response->getHttpCode(), $sdk_response->getContentType(), $sdk_response->getContentLenght(), $sdk_response->getBody(), $sdk_response->getTotalTime());
+      if ($response instanceof Response) {
+        return new ConnectorResponse($response->getStatusCode(), $response->getHeader('content-type'), $response->getHeader('content-length'), $response->getBody(), $response->getInfo('total_time'));
       }
 
-      return $sdk_response;
+      return $_REQUEST;
     }
 
     /**
