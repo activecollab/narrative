@@ -5,13 +5,14 @@
   "require" : {
     "symfony/console" : "~2.3",
     "herrera-io/phar-update" : "~1.0",
+    "phine/phar": "~1.0",
     "peekmo/jsonpath": "dev-master",
     "michelf/php-markdown": ">1.4",
     "razielanarki/hyperlight": "~0.1",
     "league/csv": "~6.0",
     "smarty/smarty": "~3.1",
     "jbroadway/urlify": "1.0.*@dev",
-    "phine/phar": "~1.0",
+    "guzzle/guzzle": "~3.9",
     "activecollab/activecollab-sdk": "dev-develop#827df25d83cabc93a62383d10561f99db9902d09"
   },
   "require-dev" : {
