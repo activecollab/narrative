@@ -13,7 +13,7 @@
     "smarty/smarty": "~3.1",
     "jbroadway/urlify": "1.0.*@dev",
     "guzzle/guzzle": "~3.9",
-    "activecollab/activecollab-sdk": "dev-develop#827df25d83cabc93a62383d10561f99db9902d09"
+    "activecollab/activecollab-feather-sdk": "~2.0"
   },
   "require-dev" : {
     "phpunit/phpunit": "~4.1"
