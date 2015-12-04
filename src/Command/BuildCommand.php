@@ -9,7 +9,6 @@ use ActiveCollab\Narrative\Theme;
 use ActiveCollab\Narrative\SmartyHelpers;
 use ActiveCollab\Narrative\Story;
 use ActiveCollab\Narrative\TestResult;
-use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -28,9 +27,9 @@ class BuildCommand extends Command
     protected function configure()
     {
         $this->setName('build')
-        ->addOption('target', null, InputOption::VALUE_REQUIRED, 'Where do you want Narrative to build the docs?')
-        ->addOption('theme', null, InputOption::VALUE_REQUIRED, 'Name of the theme that should be used to build the docs')
-        ->setDescription('Build documentation');
+            ->addOption('target', null, InputOption::VALUE_REQUIRED, 'Where do you want Narrative to build the docs?')
+            ->addOption('theme', null, InputOption::VALUE_REQUIRED, 'Name of the theme that should be used to build the docs')
+            ->setDescription('Build documentation');
     }
 
     /**
