@@ -2,9 +2,9 @@
 
 namespace ActiveCollab\Narrative;
 
-use ActiveCollab\Narrative\Narrative;
 use ActiveCollab\Narrative\Connector\Connector;
 use ActiveCollab\Narrative\Error\CommandError;
+use ActiveCollab\Narrative\Error\ConnectorError;
 use ActiveCollab\Narrative\Error\Error;
 use ActiveCollab\Narrative\Error\ParseJsonError;
 use ActiveCollab\Narrative\Error\ParseError;
@@ -301,7 +301,7 @@ final class Project
                             $element->execute($this, $test_result);
                         }
                     }
-                } catch (Narrative\Error\ConnectorError $e) {
+                } catch (ConnectorError $e) {
                     $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
                     throw $e;
                 }
@@ -363,7 +363,7 @@ final class Project
 
                             $result .= '<div class="sleep">Sleeping for ' . $element->howLong() . ' seconds</div>';
                         } elseif ($element instanceof Text) {
-                            $result .= $this->renderText($story, $element, $smarty);
+                            $result .= $this->renderText($element, $smarty);
                         }
                     }
 
@@ -379,7 +379,7 @@ final class Project
 
                         $result = '<p class="personas">Personas in this Story: Default, ' . implode(', ', $persona_names) . '.</p>' . $result;
                     }
-                } catch (Narrative\Error\ConnectorError $e) {
+                } catch (ConnectorError $e) {
                     $this->tearDown($test_result); // Make sure that we tear down the environment in case of an error
                     throw $e;
                 }
@@ -398,12 +398,11 @@ final class Project
     }
 
     /**
-     * @param Story  $story
-     * @param Text   $element
-     * @param Smarty $smarty
+     * @param  Text   $element
+     * @param  Smarty $smarty
      * @return string
      */
-    private function renderText(Story &$story, Text $element, Smarty &$smarty)
+    private function renderText(Text $element, Smarty &$smarty)
     {
         if (strpos($element->getSource(), '<{') === false) {
             return Narrative::markdownToHtml($element->getSource());
