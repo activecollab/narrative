@@ -1,9 +1,10 @@
 <?php
-  namespace ActiveCollab\Narrative\Error;
 
-  /**
-   * @package ActiveCollab\Narrative\Narrative\Error
-   */
-  class Error extends \Exception
-  {
-  }
+namespace ActiveCollab\Narrative\Error;
+
+/**
+ * @package ActiveCollab\Narrative\Error
+ */
+class Error extends \Exception
+{
+}

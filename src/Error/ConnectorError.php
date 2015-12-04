@@ -1,27 +1,20 @@
 <?php
 
-  namespace ActiveCollab\Narrative\Error;
+namespace ActiveCollab\Narrative\Error;
 
-  use Exception;
+use Exception;
 
-  /**
-   * Connector error
-   *
-   * @package ActiveCollab\Narrative\Narrative\Error
-   */
-  class ConnectorError extends Error
-  {
+/**
+ * @package ActiveCollab\Narrative\Error
+ */
+class ConnectorError extends Error
+{
     /**
-     * Construct a message
-     *
-     * @param string|null $message
+     * @param string         $message
      * @param Exception|null $previous
      */
-    function __construct($message = null, Exception $previous = null) {
-      if(empty($message)) {
-        $message = 'Connector error';
-      }
-
-      parent::__construct($message, 0, $previous);
+    function __construct($message = 'Connector error', Exception $previous = null)
+    {
+        parent::__construct($message, 0, $previous);
     }
-  }
+}
