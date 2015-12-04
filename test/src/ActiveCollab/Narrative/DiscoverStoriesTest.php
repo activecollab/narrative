@@ -6,7 +6,7 @@
   /**
    * Test story discovery
    *
-   * @package ActiveCollab\Narrative\Test
+   * @package ActiveCollab\Narrative\Narrative\Test
    */
   class DiscoverStoriesTest extends \PHPUnit_Framework_TestCase
   {

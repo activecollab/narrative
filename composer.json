@@ -3,6 +3,7 @@
   "description": "Use stories to test and document your API",
   "license": "MIT",
   "require": {
+    "php": ">=7.0.0",
     "symfony/console": "~2.3",
     "herrera-io/phar-update": "~1.0",
     "phine/phar": "~1.0",

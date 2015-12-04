@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "7beeb29405dce576059652231cd6daac",
-    "content-hash": "d346019c7aee3a5e4be0a3d74c9c0068",
+    "hash": "8f3d097d592b39e382aad1595739d962",
+    "content-hash": "031e1039b2c586ab6efca6e6a1f30e5d",
     "packages": [
         {
             "name": "activecollab/activecollab-feather-sdk",
@@ -2385,6 +2385,8 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "php": ">=7.0.0"
+    },
     "platform-dev": []
 }
