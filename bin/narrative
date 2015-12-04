@@ -6,11 +6,13 @@
   use Symfony\Component\Console\Application;
 
   $application = new Application('Narrative', \ActiveCollab\Narrative::VERSION);
-  $application->add(new Command\BuildCommand());
-  $application->add(new Command\InitCommand());
-  $application->add(new Command\RoutesCommand());
-  $application->add(new Command\StoriesCommand());
-  $application->add(new Command\StoryCommand());
-  $application->add(new Command\TestCommand());
-  $application->add(new Command\UpdateCommand());
+
+  foreach (new DirectoryIterator(dirname(__DIR__) . '/src/ActiveCollab/Narrative/Command') as $file) {
+    if ($file->isFile()) {
+      $class_name = ('\\ActiveCollab\\Narrative\\Command\\' . $file->getBasename('.php'));
+
+      $application->add(new $class_name);
+    }
+  }
+
   $application->run();

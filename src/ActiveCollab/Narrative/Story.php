@@ -70,9 +70,21 @@
      */
     private function getGroupsFromPath($stories_path)
     {
-      $groups = trim(substr(dirname($this->path), strlen($stories_path)), '/');
+      if ($groups = trim(substr(dirname($this->path), strlen($stories_path)), '/')) {
+        $groups = explode('/', $groups);
 
-      return $groups ? explode('/', $groups) : [];
+        foreach ($groups as $k => $v) {
+          $dot_pos = strpos($v, '.');
+
+          if ($dot_pos !== false) {
+            $groups[$k] = trim(substr($v, $dot_pos + 1));
+          }
+        }
+
+        return $groups;
+      } else {
+        return [];
+      }
     }
 
     /**

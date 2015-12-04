@@ -5,7 +5,7 @@
     <p>Stay up to date with all new features:</p>
     <ul class="links">
     <{foreach $project->getSocialLinks() as $service}>
-      <li><a href="<{$service.url}>" target="_blank"><img  src="<{theme_asset name=$service.icon page_level=$page_level current_locale=$current_locale}>" title="{$service.name}" alt="{$service.name} icon"></a></li>
+      <li><a href="<{$service.url}>" target="_blank"><img  src="<{theme_asset name=$service.icon page_level=$page_level current_locale=$current_locale}>" title="<{$service.name}>" alt="<{$service.name}> icon"></a></li>
     <{/foreach}>
     </ul>
   </div>
