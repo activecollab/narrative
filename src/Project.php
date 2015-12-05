@@ -3,6 +3,7 @@
 namespace ActiveCollab\Narrative;
 
 use ActiveCollab\Narrative\Connector\Connector;
+use ActiveCollab\Narrative\Connector\GenericConnector;
 use ActiveCollab\Narrative\Error\CommandError;
 use ActiveCollab\Narrative\Error\ConnectorError;
 use ActiveCollab\Narrative\Error\Error;
@@ -107,7 +108,7 @@ final class Project
                     require_once $connector_settings['file'];
                 }
 
-                if ((new \ReflectionClass($connector_class))->isSubclassOf('ActiveCollab\Narrative\Narrative\Connector\Connector')) {
+                if ((new \ReflectionClass($connector_class))->isSubclassOf(Connector::class)) {
                     $this->connector = new $connector_class($connector_settings);
                 }
             }
@@ -131,7 +132,7 @@ final class Project
             }
         }
 
-        return ['\\ActiveCollab\\Narrative\\Narrative\\Connector\\Generic', null];
+        return [GenericConnector::class, null];
     }
 
     /**
@@ -472,7 +473,7 @@ final class Project
     /**
      * Execute set up or tear down command
      *
-     * @param mixed $c
+     * @param  array|string $c
      * @return string
      * @throws CommandError
      */
@@ -483,7 +484,7 @@ final class Project
         if (is_string($c)) {
             $command = $c;
         } elseif (is_array($c) && count($c)) {
-            list($command, $working_dir) = $c;
+            list ($command, $working_dir) = $c;
 
             if ($working_dir != $original_working_dir) {
                 chdir($working_dir);
@@ -492,13 +493,26 @@ final class Project
             throw new CommandError($c);
         }
 
-        $result = exec($command);
+        $output = [];
+        $exit_code = 0;
+
+        exec($command, $output, $exit_code);
+
+        if ($exit_code !== 0) {
+            throw new CommandError($command, "Command exited with code $exit_code. Output: " . implode("\n", $output));
+        }
+
+        print "\n";
+        print "Command: $command\n";
+        print "Command output:\n\n";
+        print implode("\n", $output);
+        print "\n\n";
 
         if (getcwd() != $original_working_dir) {
             chdir($original_working_dir);
         }
 
-        return $result;
+        return implode("\n", $output);
     }
 
     /**
