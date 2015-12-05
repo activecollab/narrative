@@ -2,15 +2,17 @@
 
 namespace ActiveCollab\Narrative;
 
-use ActiveCollab\Narrative\Error\ParseError, ActiveCollab\Narrative\Error\ParseJsonError;
-use Symfony\Component\Console\Output\OutputInterface, Symfony\Component\Console\Helper\Table, \Exception;
-use ActiveCollab\Narrative\StoryElement\Request, ActiveCollab\Narrative\Connector\Connector;
+use ActiveCollab\Narrative\Connector\Connector;
+use ActiveCollab\Narrative\Error\ParseError;
+use ActiveCollab\Narrative\Error\ParseJsonError;
+use ActiveCollab\Narrative\StoryElement\Request;
+use Exception;
 use League\Csv\Reader;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Helper\Table;
 
 /**
- * Collect information about tests as they are executed
- *
- * @package ActiveCollab\Narrative\Narrative
+ * @package ActiveCollab\Narrative
  */
 final class TestResult
 {
@@ -257,7 +259,7 @@ final class TestResult
                 print_r($response->getJson());
                 $this->output->write(ob_get_clean());
 
-                // CSV
+            // CSV
             } elseif ($response->getContentType() == 'text/csv') {
                 $table = new Table($this->output);
 
@@ -274,7 +276,7 @@ final class TestResult
 
                 $table->render();
 
-                // Plain text
+            // Plain text
             } else {
                 $this->output->writeln($response->getBody());
             }
