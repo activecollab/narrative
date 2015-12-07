@@ -26,6 +26,11 @@ class GenericConnector extends Connector
     private $token;
 
     /**
+     * @var boolean|null
+     */
+    private $force_slash = null;
+
+    /**
      * @var Client
      */
     private $client;
@@ -44,6 +49,7 @@ class GenericConnector extends Connector
         }
 
         $this->token = $parameters['token'] ?? '';
+        $this->force_slash = $parameters['force_slash'] ?? null;
 
         $this->client = new Client();
     }
@@ -180,7 +186,15 @@ class GenericConnector extends Connector
         if (filter_var($path, FILTER_VALIDATE_URL)) {
             return $path;
         } else {
-            return $this->base_url . ltrim($path, '/');
+            $url = $this->base_url . ltrim($path, '/');
+
+            if ($this->force_slash === true && mb_substr($path, mb_strlen($path) - 1) != '/') {
+                $url .= '/';
+            } elseif ($this->force_slash === false) {
+                $url = rtrim($url, '/');
+            }
+
+            return $url;
         }
     }
 
